@@ -152,34 +152,6 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 });
 
 // ==========================================
-// 3. LOGIN API
-// ==========================================
-app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-
-        if (error) {
-            return res.status(401).json({ success: false, message: error.message });
-        }
-
-        return res.status(200).json({ 
-            success: true, 
-            message: "Login Successful!", 
-            token: data.session.access_token,
-            user: data.user 
-        });
-
-    } catch (err) {
-        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
-    }
-});
-
-// ==========================================
 // 3. LOGIN API (UPDATED FOR FULL PROFILE DATA)
 // ==========================================
 app.post('/api/login', async (req, res) => {
