@@ -227,7 +227,7 @@
             <li><a href="login.html" class="btn btn-primary" style="padding: 8px 24px; color: white;">Login / Sign Up</a></li>
         </ul>
 
-        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">☰</div>
+        <div class="menu-toggle" id="menuToggle">☰</div>
     </nav>
 
     <!-- HERO SECTION -->
@@ -530,7 +530,7 @@
         </div>
     </footer>
 
-    <!-- ADD TO CART JAVASCRIPT -->
+    <!-- ADD TO CART & NAVBAR JAVASCRIPT -->
     <script>
         // Update cart count on load
         function updateCartCount() {
@@ -568,6 +568,32 @@
 
         // Run when page loads
         window.onload = updateCartCount;
+
+        // ==========================================
+        // NEW FIX: MOBILE NAVBAR CLOSE LOGIC
+        // ==========================================
+        const navLinks = document.getElementById('navLinks');
+        const menuToggle = document.getElementById('menuToggle');
+
+        // 1. Open/Close menu when clicking the hamburger icon
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // 2. Close menu when clicking ANY link inside the navbar
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // 3. Close menu when clicking ANYWHERE outside the navbar
+        document.addEventListener('click', (event) => {
+            // Check if menu is active, and if the click was outside the menu AND the toggle button
+            if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
