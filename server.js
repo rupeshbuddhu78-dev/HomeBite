@@ -4,31 +4,31 @@ const cors = require('cors');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('cloudinary').v2; // Cloudinary SDK
-const multer = require('multer');             // File upload handler (Food items ke liye)
+const multer = require('multer');             // File upload handler
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Base64 image ke liye limit badha di
+app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(__dirname));
 
 // ==========================================
-// CLOUDINARY CONFIGURATION (API Secret Added)
+// CLOUDINARY CONFIGURATION 
 // ==========================================
 cloudinary.config({
     cloud_name: 'dr8yguhui',
     api_key: '981929427569341',
-    api_secret: '5GPy1IaiebH5TPTH9jnn7uHElk8' // 👈 Aapka API secret yahan direct dal diya hai
+    api_secret: '5GPy1IaiebH5TPTH9jnn7uHElk8' 
 });
 
-// Multer Setup (Sirf Food Items API ke liye use hoga)
+// Multer Setup (Form Data aur Image Upload ke liye)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Helper function for Food Items
+// Helper function for Cloudinary
 const uploadToCloudinary = (fileBuffer, folderName) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -73,7 +73,6 @@ app.post('/api/signup', async (req, res) => {
     try {
         let profilePicUrl = null;
 
-        // Agar user ne photo dali hai, toh Cloudinary par direct Base64 string bhej do
         if (profileImage && profileImage.trim() !== "") {
             const cloudinaryResult = await cloudinary.uploader.upload(profileImage, {
                 folder: 'homebite_users'
@@ -81,19 +80,15 @@ app.post('/api/signup', async (req, res) => {
             profilePicUrl = cloudinaryResult.secure_url; 
         }
 
-        // Step 1: Supabase Auth me Register karein
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
         });
 
-        if (authError) {
-            return res.status(400).json({ success: false, message: authError.message });
-        }
+        if (authError) return res.status(400).json({ success: false, message: authError.message });
 
         const userId = authData.user.id;
 
-        // Step 2: Supabase Database 'users' table me Data (aur Image URL) save karein
         const { error: dbError } = await supabase
             .from('users')
             .insert([{ 
@@ -106,21 +101,17 @@ app.post('/api/signup', async (req, res) => {
                 password: password
             }]);
 
-        if (dbError) {
-            console.error("DB Error:", dbError);
-            return res.status(500).json({ success: false, message: "Auth successful, but failed to save profile details: " + dbError.message });
-        }
+        if (dbError) return res.status(500).json({ success: false, message: "Auth successful, but failed to save profile details: " + dbError.message });
 
         return res.status(201).json({ success: true, message: "Account Created Successfully!", profile_pic_url: profilePicUrl });
 
     } catch (err) {
-        console.error("Signup Catch Error:", err);
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 });
 
 // ==========================================
-// 2. FOOD ITEMS UPLOAD API (Multipart Form-data)
+// 2. FOOD ITEMS UPLOAD API 
 // ==========================================
 app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
     const { cook_id, name, price, type } = req.body;
@@ -135,13 +126,7 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 
         const { data, error } = await supabase
             .from('food_items')
-            .insert([{
-                cook_id: cook_id,
-                name: name,
-                price: parseInt(price),
-                type: type,
-                image_url: foodImageUrl
-            }]);
+            .insert([{ cook_id, name, price: parseInt(price), type, image_url: foodImageUrl }]);
 
         if (error) return res.status(400).json({ success: false, message: error.message });
 
@@ -152,48 +137,95 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 });
 
 // ==========================================
-// 3. LOGIN API (UPDATED FOR FULL PROFILE DATA)
+// 3. LOGIN API (FULL PROFILE DATA)
 // ==========================================
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Supabase Auth se Login karo
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
+            email, password
         });
 
-        if (authError) {
-            return res.status(401).json({ success: false, message: authError.message });
-        }
+        if (authError) return res.status(401).json({ success: false, message: authError.message });
 
-        // 2. Database ki 'users' table se baki data nikalo (name, phone, address, photo)
         const { data: userData, error: dbError } = await supabase
             .from('users')
             .select('*')
             .eq('email', email)
             .single();
 
-        if (dbError) {
-            console.error("DB Fetch Error:", dbError);
-        }
-
-        // 3. Dono data ko mila do (Merge)
-        const finalUser = {
-            ...authData.user,
-            ...userData // Yeh add karega name, phone, address, profile_pic_url
-        };
+        const finalUser = { ...authData.user, ...userData };
 
         return res.status(200).json({ 
             success: true, 
             message: "Login Successful!", 
             token: authData.session.access_token,
-            user: finalUser // Ab frontend ko Pura Data milega!
+            user: finalUser 
         });
 
     } catch (err) {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+});
+
+// ==========================================
+// 4. MISSING FIX: UPDATE PROFILE API
+// ==========================================
+app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) => {
+    const { userId, fullname, phone, address } = req.body;
+
+    try {
+        let updateData = {};
+        if (fullname) updateData.name = fullname;
+        if (phone) updateData.phone = phone;
+        if (address) updateData.address = address;
+
+        // Agar user ne nayi photo upload ki hai
+        if (req.file) {
+            const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_users');
+            updateData.profile_pic_url = cloudinaryResult.secure_url;
+        }
+
+        // Database ko update karo
+        const { error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', userId);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Profile updated successfully!",
+            profile_pic_url: updateData.profile_pic_url // Nayi photo ka URL frontend ko wapas bhej do
+        });
+
+    } catch (err) {
+        console.error("Update Profile Error:", err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 5. MISSING FIX: CHANGE PASSWORD API
+// ==========================================
+app.post('/api/change-password', async (req, res) => {
+    const { userId, password } = req.body;
+
+    try {
+        // Apni database table mein password update karo
+        const { error } = await supabase
+            .from('users')
+            .update({ password: password })
+            .eq('id', userId);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: "Password updated successfully!" });
+    } catch (err) {
+        console.error("Change Password Error:", err);
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
