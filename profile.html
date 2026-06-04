@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - HomeBite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         /* === GLOBAL SETTINGS === */
@@ -48,7 +48,7 @@
             overflow: hidden;
         }
         
-        /* Profile Image Container with Cloudinary Upload Option */
+        /* Profile Image Container */
         .profile-img-container {
             position: relative;
             width: 115px;
@@ -102,8 +102,8 @@
             border: 1px solid rgba(255, 107, 0, 0.15);
         }
 
-        /* === DASHBOARD LAYOUT === */
-        .content-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 35px; }
+        /* === DASHBOARD LAYOUT (Centered single column for operations) === */
+        .content-grid { display: grid; grid-template-columns: 1fr; max-width: 750px; margin: 0 auto; gap: 35px; }
         .card { background: white; padding: 30px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
         .section-title { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 25px; border-bottom: 2px solid #f9f9f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 
@@ -115,10 +115,13 @@
         }
         .settings-item:hover { background: #fff5eb; color: var(--primary); transform: translateX(5px); }
 
-        /* === PREMIUM ORDER HISTORY === */
+        /* === PREMIUM ORDER HISTORY (Inside Modal) === */
+        #orderList { max-height: 400px; overflow-y: auto; padding-right: 8px; }
+        #orderList::-webkit-scrollbar { width: 6px; }
+        #orderList::-webkit-scrollbar-thumb { background: #eaeaea; border-radius: 10px; }
         .order-card { padding: 20px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .order-card:last-child { border-bottom: none; }
-        .order-details h4 { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+        .order-details h4 { font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
         .order-details p { color: #777; font-size: 0.85rem; font-weight: 500; }
         
         .order-status-wrapper { text-align: right; }
@@ -164,7 +167,6 @@
             }
             .nav-links.active { display: flex; }
             .menu-toggle { display: block; }
-            .content-grid { grid-template-columns: 1fr; gap: 25px; }
             .profile-banner { flex-direction: column; text-align: center; padding: 30px 20px; gap: 15px; }
             .profile-info .email-phone { justify-content: center; gap: 10px; font-size: 0.9rem; }
         }
@@ -216,16 +218,12 @@
                 <h2 class="section-title">⚙️ Account Operations</h2>
                 <ul class="settings-list">
                     <li class="settings-item" onclick="openModal('editProfileModal')">Edit Profile Details <span class="arrow">➔</span></li>
+                    <li class="settings-item" onclick="openModal('ordersModal')">View Full Order History <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="openModal('passwordModal')">Change Secret Password <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="alert('Manage addresses feature coming soon!')">Manage Delivery Addresses <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="alert('Connecting to chat support...')">Help & Active Support <span class="arrow">➔</span></li>
                 </ul>
                 <button class="logout-btn" onclick="handleLogout()">🚪 Secure Logout</button>
-            </div>
-
-            <div class="card">
-                <h2 class="section-title">📦 Your Order History</h2>
-                <div id="orderList"></div>
             </div>
         </div>
     </div>
@@ -249,6 +247,15 @@
                 </div>
                 <button type="submit" class="save-btn" id="saveProfileBtn">Save Changes</button>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="ordersModal">
+        <div class="modal-box" style="max-width: 580px;">
+            <span class="modal-close-btn" onclick="closeModal('ordersModal')">&times;</span>
+            <h3>📦 Your Order History</h3>
+            <div id="orderList">
+                </div>
         </div>
     </div>
 
@@ -299,7 +306,6 @@
 
         // UI details filling helper
         function renderUserProfileUI() {
-            // ✅ Fix: Check priority directly from database columns first
             const fullName = loggedInUser.name || loggedInUser.user_metadata?.full_name || "HomeBite User";
             const email = loggedInUser.email || "No email added";
             const phone = loggedInUser.phone || loggedInUser.user_metadata?.phone_number || "No number added";
@@ -311,12 +317,11 @@
             document.getElementById('userPhone').innerText = "📞 " + phone;
             document.getElementById('userAddress').innerText = address;
 
-            // Handle Profile Image or Initials Text fallback
             const picContainer = document.getElementById('userProfilePic');
             
             if (photoUrl && photoUrl !== 'null' && photoUrl !== '') {
                 picContainer.innerHTML = `<img src="${photoUrl}" alt="Profile Pic">`;
-                picContainer.style.background = 'transparent'; // Remove background color if image exists
+                picContainer.style.background = 'transparent';
             } else {
                 const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
                 picContainer.innerText = initials;
@@ -328,7 +333,6 @@
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
             
-            // Input details pehle se fill kar dena popup form me
             if(modalId === 'editProfileModal') {
                 document.getElementById('editName').value = loggedInUser.name || loggedInUser.user_metadata?.full_name || "";
                 document.getElementById('editPhone').value = loggedInUser.phone || loggedInUser.user_metadata?.phone_number || "";
@@ -348,16 +352,14 @@
             if (!file) return;
 
             const picContainer = document.getElementById('userProfilePic');
-            picContainer.innerText = "⏳"; // Simple loader text
+            picContainer.innerText = "⏳";
             picContainer.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
 
-            // Backend URL integration via Form Data
             const formData = new FormData();
             formData.append('profile_pic', file);
-            formData.append('userId', loggedInUser.id); // For reference in backend updating matching row
+            formData.append('userId', loggedInUser.id);
 
             try {
-                // Aap is endpoint ko user details update route ke roop me define kar sakte hain backend me
                 const response = await fetch('/api/update-profile', {
                     method: 'POST',
                     body: formData
@@ -367,11 +369,8 @@
 
                 if (result.success) {
                     alert("Profile Picture Updated Successfully!");
-                    
-                    // Frontend LocalStorage me save naya url update karein
                     loggedInUser.profile_pic_url = result.profile_pic_url;
                     localStorage.setItem('homeBiteUser', JSON.stringify(loggedInUser));
-                    
                     renderUserProfileUI();
                 } else {
                     alert("Upload Failed: " + result.message);
@@ -397,7 +396,6 @@
             const updatedPhone = document.getElementById('editPhone').value;
             const updatedAddress = document.getElementById('editAddress').value;
 
-            // Form data creation to send text modifications
             const formData = new FormData();
             formData.append('userId', loggedInUser.id);
             formData.append('fullname', updatedName);
@@ -415,7 +413,6 @@
                 if (result.success) {
                     alert("Profile details sync saved!");
                     
-                    // Sync up changes inside local session object
                     loggedInUser.name = updatedName;
                     loggedInUser.phone = updatedPhone;
                     loggedInUser.address = updatedAddress;
@@ -435,7 +432,6 @@
             } catch (err) {
                 alert("Server Connection Failed. Local storage saved temporarily.");
                 
-                // Fallback direct storage sync if test environment is local only
                 loggedInUser.name = updatedName;
                 loggedInUser.phone = updatedPhone;
                 loggedInUser.address = updatedAddress;
@@ -472,7 +468,6 @@
             pBtn.disabled = true;
 
             try {
-                // Fetch call calling pass change server api
                 const response = await fetch('/api/change-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -497,7 +492,7 @@
             }
         }
 
-        // --- MOCK ORDERS COMPONENT ---
+        // --- MOCK ORDERS COMPONENT (Loads Inside the Modal) ---
         function renderMockOrders() {
             const mockOrders = [
                 { id: "#HB-9841", item: "Special Premium Rajma Chawal Combo", date: "Today, 1:15 PM", status: "Pending" },
