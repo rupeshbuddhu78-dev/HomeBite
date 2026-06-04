@@ -32,13 +32,12 @@
 
         /* === AUTH BACKGROUND WRAPPER === */
         .auth-wrapper {
-            /* Beautiful Background Image with Dark Overlay */
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 100px 20px 40px; /* Padding top prevents navbar overlap */
+            padding: 100px 20px 40px;
         }
 
         /* === LOGIN CARD (GLASSMORPHISM) === */
@@ -95,7 +94,6 @@
         .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
         .auth-footer a:hover { text-decoration: underline; }
 
-        /* Mobile Adjustments */
         @media (max-width: 900px) {
             .nav-links { 
                 position: absolute; top: 100%; left: 0; width: 100%; 
@@ -156,20 +154,13 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Set Cart Count on Load
         function updateCartCount() {
             let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
             let count = cart.reduce((total, item) => total + item.quantity, 0);
             document.getElementById('navCartCount').innerText = count;
         }
         window.onload = updateCartCount;
-
-        // SUPABASE CONNECTION
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         async function handleLogin(e) {
             e.preventDefault();
@@ -181,23 +172,34 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if(supabase) {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password,
+            try {
+                // Secure backend call hitting the express server.js
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
                 });
 
-                if (error) {
-                    alert("Login Failed: " + error.message);
-                    btn.innerText = "Sign In";
-                    btn.disabled = false;
-                } else {
+                const data = await response.json();
+
+                if (data.success) {
                     alert("Login Successful!");
-                    window.location.href = 'index.html'; // Redirect to home page after success
+                    
+                    // User data aur dynamic session token ko store karo local storage me
+                    localStorage.setItem('homeBiteUser', JSON.stringify(data.user));
+                    localStorage.setItem('homeBiteToken', data.token);
+
+                    // Successful authentication ke baad sidhe profile dashboard pe redirect karo
+                    window.location.href = 'profile.html'; 
+                } else {
+                    alert("Login Failed: " + data.message);
                 }
-            } else {
-                alert("Demo Login: Successful! (Connect Supabase to live test)");
-                window.location.href = 'index.html';
+            } catch (error) {
+                console.error("Error during login:", error);
+                alert("Could not connect to the server. Please try again.");
+            } finally {
+                btn.innerText = "Sign In";
+                btn.disabled = false;
             }
         }
     </script>
