@@ -179,6 +179,52 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// ==========================================
+// 3. LOGIN API (UPDATED FOR FULL PROFILE DATA)
+// ==========================================
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        // 1. Supabase Auth se Login karo
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (authError) {
+            return res.status(401).json({ success: false, message: authError.message });
+        }
+
+        // 2. Database ki 'users' table se baki data nikalo (name, phone, address, photo)
+        const { data: userData, error: dbError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (dbError) {
+            console.error("DB Fetch Error:", dbError);
+        }
+
+        // 3. Dono data ko mila do (Merge)
+        const finalUser = {
+            ...authData.user,
+            ...userData // Yeh add karega name, phone, address, profile_pic_url
+        };
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Login Successful!", 
+            token: authData.session.access_token,
+            user: finalUser // Ab frontend ko Pura Data milega!
+        });
+
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    }
+});
+
 // Wildcard Route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
