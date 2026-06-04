@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order History & Tracking - HomeBite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GLOBAL SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #fdfbf7; color: #333; overflow-x: hidden; }
+        :root { --primary: #ff6b00; --secondary: #ff3c00; --dark: #121212; --border: #eaeaea; --bg-light: #fff5eb; }
+
+        /* === PREMIUM NAVBAR === */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px); position: fixed; width: 100%; top: 0; z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .logo { font-size: 28px; font-weight: 800; color: var(--dark); letter-spacing: -1px; text-decoration: none; }
+        .logo span { background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .nav-links { display: flex; gap: 25px; list-style: none; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: 0.3s; padding: 5px 0; }
+        .nav-links a:hover { color: var(--primary); }
+        .back-btn { display: flex; align-items: center; gap: 8px; color: #555; font-weight: 600; text-decoration: none; margin-bottom: 20px; transition: 0.2s;}
+        .back-btn:hover { color: var(--primary); transform: translateX(-5px); }
+
+        /* === PAGE CONTAINER === */
+        .page-container { max-width: 900px; margin: 120px auto 50px; padding: 0 5%; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
+        .filter-select { padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border); outline: none; font-weight: 600; color: #555; background: white; cursor: pointer; }
+
+        /* === ORDER CARD DESIGN === */
+        .order-card { 
+            background: white; border-radius: 20px; padding: 30px; margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border);
+            transition: 0.3s;
+        }
+        .order-card:hover { box-shadow: 0 15px 35px rgba(255, 107, 0, 0.08); border-color: rgba(255, 107, 0, 0.2); }
+
+        /* Header of Card */
+        .card-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px; }
+        .order-id { font-size: 1.1rem; font-weight: 800; color: var(--dark); }
+        .order-date { font-size: 0.85rem; color: #777; font-weight: 500; margin-top: 4px; }
+        .order-amount { font-size: 1.2rem; font-weight: 800; color: var(--primary); text-align: right; }
+        .item-count { font-size: 0.85rem; color: #777; font-weight: 500; }
+
+        /* Order Items */
+        .order-items { margin-bottom: 25px; }
+        .item-row { display: flex; justify-content: space-between; font-size: 0.95rem; color: #444; font-weight: 500; margin-bottom: 8px; }
+        
+        /* === TRACKING TIMELINE === */
+        .tracking-container { background: var(--bg-light); padding: 25px; border-radius: 16px; margin-bottom: 25px; }
+        .timeline { display: flex; justify-content: space-between; position: relative; }
+        
+        /* Line connecting steps */
+        .timeline::before { content: ''; position: absolute; top: 16px; left: 5%; width: 90%; height: 4px; background: #e0e0e0; z-index: 1; border-radius: 10px; }
+        .timeline-progress { position: absolute; top: 16px; left: 5%; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); z-index: 2; border-radius: 10px; transition: 0.5s; }
+        
+        .step { position: relative; z-index: 3; text-align: center; width: 25%; }
+        .step-icon { 
+            width: 36px; height: 36px; background: white; border-radius: 50%; margin: 0 auto 10px; 
+            display: flex; align-items: center; justify-content: center; color: #ccc; font-weight: bold; font-size: 1rem;
+            border: 4px solid #e0e0e0; transition: 0.3s;
+        }
+        .step-label { font-size: 0.8rem; font-weight: 700; color: #999; }
+        
+        /* Active Step Styles */
+        .step.active .step-icon { background: var(--primary); color: white; border-color: #fff; box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.3); }
+        .step.active .step-label { color: var(--dark); }
+
+        /* === ACTION BUTTONS === */
+        .card-actions { display: flex; gap: 15px; justify-content: flex-end; }
+        .btn { padding: 10px 24px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.3s; border: none; }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: #555; }
+        .btn-outline:hover { border-color: var(--dark); color: var(--dark); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--secondary); box-shadow: 0 5px 15px rgba(255, 107, 0, 0.3); }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 600px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .timeline { flex-direction: column; gap: 20px; align-items: flex-start; padding-left: 10px;}
+            .timeline::before { top: 0; left: 26px; width: 4px; height: 100%; }
+            .timeline-progress { top: 0; left: 26px; width: 4px; height: 0%; /* JS will handle height */ }
+            .step { width: 100%; display: flex; align-items: center; gap: 15px; text-align: left; }
+            .step-icon { margin: 0; }
+            .card-actions { flex-direction: column; }
+            .btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Home<span>Bite</span></a>
+        <ul class="nav-links">
+            <li><a href="profile.html">My Profile</a></li>
+            <li><a href="cart.html">Cart 🛒</a></li>
+        </ul>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="page-container">
+        
+        <a href="profile.html" class="back-btn">← Back to Profile</a>
+
+        <div class="page-header">
+            <h1>📦 My Orders</h1>
+            <select class="filter-select">
+                <option value="all">All Orders</option>
+                <option value="active">Active Tracking</option>
+                <option value="delivered">Delivered</option>
+            </select>
+        </div>
+
+        <div id="ordersContainer">
+            <!-- Orders will be injected here via JavaScript -->
+        </div>
+
+    </div>
+
+    <script>
+        // Mock Data for Orders
+        // Status keys: 1 = Placed, 2 = Preparing, 3 = On the Way, 4 = Delivered
+        const myOrders = [
+            {
+                id: "HB-9841",
+                date: "Today, 1:15 PM",
+                amount: "₹240",
+                itemCount: "2 Items",
+                items: [
+                    { name: "1x Premium Rajma Chawal Combo", price: "₹150" },
+                    { name: "1x Extra Roti (2 pcs)", price: "₹90" }
+                ],
+                status: 3, // On the way
+                isDelivered: false
+            },
+            {
+                id: "HB-9720",
+                date: "Yesterday, 8:30 PM",
+                amount: "₹180",
+                itemCount: "1 Item",
+                items: [
+                    { name: "1x Chicken Dum Biryani (Hostel Pack)", price: "₹180" }
+                ],
+                status: 4, // Delivered
+                isDelivered: true
+            },
+            {
+                id: "HB-9511",
+                date: "02 June 2026, 2:00 PM",
+                amount: "₹350",
+                itemCount: "3 Items",
+                items: [
+                    { name: "1x Paneer Butter Masala", price: "₹200" },
+                    { name: "4x Tawa Roti", price: "₹80" },
+                    { name: "1x Sweet Lassi", price: "₹70" }
+                ],
+                status: 4, // Delivered
+                isDelivered: true
+            }
+        ];
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            myOrders.forEach(order => {
+                // Calculate Timeline Progress Bar Width (Desktop)
+                let progressWidth = '0%';
+                if(order.status === 2) progressWidth = '33%';
+                if(order.status === 3) progressWidth = '66%';
+                if(order.status === 4) progressWidth = '100%';
+
+                // Items HTML
+                let itemsHTML = '';
+                order.items.forEach(item => {
+                    itemsHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price}</span></div>`;
+                });
+
+                // Generate Card
+                const cardHTML = `
+                    <div class="order-card">
+                        <!-- Card Header -->
+                        <div class="card-header">
+                            <div>
+                                <div class="order-id">#${order.id}</div>
+                                <div class="order-date">${order.date}</div>
+                            </div>
+                            <div>
+                                <div class="order-amount">${order.amount}</div>
+                                <div class="item-count">${order.itemCount}</div>
+                            </div>
+                        </div>
+
+                        <!-- Order Items -->
+                        <div class="order-items">
+                            ${itemsHTML}
+                        </div>
+
+                        <!-- Live Tracking Timeline -->
+                        <div class="tracking-container">
+                            <div class="timeline">
+                                <div class="timeline-progress" style="width: ${window.innerWidth > 600 ? progressWidth : '4px'}; height: ${window.innerWidth <= 600 ? progressWidth : '4px'};"></div>
+                                
+                                <div class="step ${order.status >= 1 ? 'active' : ''}">
+                                    <div class="step-icon">📝</div>
+                                    <div class="step-label">Order Placed</div>
+                                </div>
+                                <div class="step ${order.status >= 2 ? 'active' : ''}">
+                                    <div class="step-icon">👨‍🍳</div>
+                                    <div class="step-label">Preparing</div>
+                                </div>
+                                <div class="step ${order.status >= 3 ? 'active' : ''}">
+                                    <div class="step-icon">🛵</div>
+                                    <div class="step-label">On the Way</div>
+                                </div>
+                                <div class="step ${order.status >= 4 ? 'active' : ''}">
+                                    <div class="step-icon">✅</div>
+                                    <div class="step-label">Delivered</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="card-actions">
+                            <button class="btn btn-outline" onclick="alert('Connecting to help center for Order #${order.id}')">Need Help?</button>
+                            ${order.isDelivered 
+                                ? `<button class="btn btn-primary" onclick="alert('Adding items from #${order.id} to cart!')">↻ Reorder</button>` 
+                                : `<button class="btn btn-primary" style="background: #25D366;" onclick="alert('Calling Delivery Boy...')">📞 Call Rider</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // Handle Responsive Timeline Progress on window resize
+        window.addEventListener('resize', renderOrders);
+        
+        // Initial Render
+        window.onload = renderOrders;
+
+    </script>
+</body>
+</html>
