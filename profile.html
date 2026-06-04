@@ -299,12 +299,12 @@
 
         // UI details filling helper
         function renderUserProfileUI() {
-            // Check mapping according to Supabase metadata structure
-            const fullName = loggedInUser.user_metadata?.full_name || loggedInUser.name || "HomeBite User";
+            // ✅ Fix: Check priority directly from database columns first
+            const fullName = loggedInUser.name || loggedInUser.user_metadata?.full_name || "HomeBite User";
             const email = loggedInUser.email || "No email added";
-            const phone = loggedInUser.user_metadata?.phone_number || loggedInUser.phone || "No number";
-            const address = loggedInUser.user_metadata?.hostel_address || loggedInUser.address || "No address added";
-            const photoUrl = loggedInUser.profile_pic_url || loggedInUser.user_metadata?.profile_pic_url;
+            const phone = loggedInUser.phone || loggedInUser.user_metadata?.phone_number || "No number added";
+            const address = loggedInUser.address || loggedInUser.user_metadata?.hostel_address || "No address added";
+            const photoUrl = loggedInUser.profile_pic_url;
 
             document.getElementById('userFullName').innerText = fullName;
             document.getElementById('userEmail').innerText = "📧 " + email;
@@ -313,11 +313,14 @@
 
             // Handle Profile Image or Initials Text fallback
             const picContainer = document.getElementById('userProfilePic');
-            if (photoUrl) {
+            
+            if (photoUrl && photoUrl !== 'null' && photoUrl !== '') {
                 picContainer.innerHTML = `<img src="${photoUrl}" alt="Profile Pic">`;
+                picContainer.style.background = 'transparent'; // Remove background color if image exists
             } else {
                 const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
                 picContainer.innerText = initials;
+                picContainer.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
             }
         }
 
@@ -327,9 +330,9 @@
             
             // Input details pehle se fill kar dena popup form me
             if(modalId === 'editProfileModal') {
-                document.getElementById('editName').value = loggedInUser.user_metadata?.full_name || loggedInUser.name || "";
-                document.getElementById('editPhone').value = loggedInUser.user_metadata?.phone_number || loggedInUser.phone || "";
-                document.getElementById('editAddress').value = loggedInUser.user_metadata?.hostel_address || loggedInUser.address || "";
+                document.getElementById('editName').value = loggedInUser.name || loggedInUser.user_metadata?.full_name || "";
+                document.getElementById('editPhone').value = loggedInUser.phone || loggedInUser.user_metadata?.phone_number || "";
+                document.getElementById('editAddress').value = loggedInUser.address || loggedInUser.user_metadata?.hostel_address || "";
             }
         }
 
@@ -346,6 +349,7 @@
 
             const picContainer = document.getElementById('userProfilePic');
             picContainer.innerText = "⏳"; // Simple loader text
+            picContainer.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
 
             // Backend URL integration via Form Data
             const formData = new FormData();
@@ -412,10 +416,11 @@
                     alert("Profile details sync saved!");
                     
                     // Sync up changes inside local session object
-                    if(!loggedInUser.user_metadata) loggedInUser.user_metadata = {};
                     loggedInUser.name = updatedName;
                     loggedInUser.phone = updatedPhone;
                     loggedInUser.address = updatedAddress;
+
+                    if(!loggedInUser.user_metadata) loggedInUser.user_metadata = {};
                     loggedInUser.user_metadata.full_name = updatedName;
                     loggedInUser.user_metadata.phone_number = updatedPhone;
                     loggedInUser.user_metadata.hostel_address = updatedAddress;
@@ -429,11 +434,13 @@
                 }
             } catch (err) {
                 alert("Server Connection Failed. Local storage saved temporarily.");
+                
                 // Fallback direct storage sync if test environment is local only
                 loggedInUser.name = updatedName;
                 loggedInUser.phone = updatedPhone;
                 loggedInUser.address = updatedAddress;
                 localStorage.setItem('homeBiteUser', JSON.stringify(loggedInUser));
+                
                 closeModal('editProfileModal');
                 renderUserProfileUI();
             } finally {
