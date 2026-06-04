@@ -115,20 +115,6 @@
         }
         .settings-item:hover { background: #fff5eb; color: var(--primary); transform: translateX(5px); }
 
-        /* === PREMIUM ORDER HISTORY (Inside Modal) === */
-        #orderList { max-height: 400px; overflow-y: auto; padding-right: 8px; }
-        #orderList::-webkit-scrollbar { width: 6px; }
-        #orderList::-webkit-scrollbar-thumb { background: #eaeaea; border-radius: 10px; }
-        .order-card { padding: 20px 0; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .order-card:last-child { border-bottom: none; }
-        .order-details h4 { font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
-        .order-details p { color: #777; font-size: 0.85rem; font-weight: 500; }
-        
-        .order-status-wrapper { text-align: right; }
-        .order-status { font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 50px; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
-        .status-completed { background: #e8f9f0; color: #00d26a; }
-        .status-pending { background: #fff3e0; color: var(--primary); }
-
         /* === LOGOUT BUTTON === */
         .logout-btn { background: #fff1f0; color: #d93025; padding: 14px; border-radius: 14px; border: 1px solid rgba(217, 48, 37, 0.1); font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logout-btn:hover { background: #d93025; color: white; box-shadow: 0 8px 20px rgba(217, 48, 37, 0.2); }
@@ -218,7 +204,7 @@
                 <h2 class="section-title">⚙️ Account Operations</h2>
                 <ul class="settings-list">
                     <li class="settings-item" onclick="openModal('editProfileModal')">Edit Profile Details <span class="arrow">➔</span></li>
-                    <li class="settings-item" onclick="openModal('ordersModal')">View Full Order History <span class="arrow">➔</span></li>
+                    <li class="settings-item" onclick="window.location.href='orderhistory.html'">View Full Order History <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="openModal('passwordModal')">Change Secret Password <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="alert('Manage addresses feature coming soon!')">Manage Delivery Addresses <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="alert('Connecting to chat support...')">Help & Active Support <span class="arrow">➔</span></li>
@@ -247,15 +233,6 @@
                 </div>
                 <button type="submit" class="save-btn" id="saveProfileBtn">Save Changes</button>
             </form>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="ordersModal">
-        <div class="modal-box" style="max-width: 580px;">
-            <span class="modal-close-btn" onclick="closeModal('ordersModal')">&times;</span>
-            <h3>📦 Your Order History</h3>
-            <div id="orderList">
-                </div>
         </div>
     </div>
 
@@ -301,7 +278,6 @@
 
             // Interface pe dynamic info dikhana
             renderUserProfileUI();
-            renderMockOrders();
         };
 
         // UI details filling helper
@@ -490,33 +466,6 @@
                 pBtn.innerText = "Update Password";
                 pBtn.disabled = false;
             }
-        }
-
-        // --- MOCK ORDERS COMPONENT (Loads Inside the Modal) ---
-        function renderMockOrders() {
-            const mockOrders = [
-                { id: "#HB-9841", item: "Special Premium Rajma Chawal Combo", date: "Today, 1:15 PM", status: "Pending" },
-                { id: "#HB-9720", item: "Chicken Dum Biryani (Hostel Feast Pack)", date: "Yesterday", status: "Completed" },
-                { id: "#HB-9511", item: "Ghar Jaisa Paneer Butter Masala + 4 Roti", date: "02 June 2026", status: "Completed" }
-            ];
-
-            const list = document.getElementById('orderList');
-            list.innerHTML = '';
-            mockOrders.forEach(order => {
-                list.innerHTML += `
-                    <div class="order-card">
-                        <div class="order-details">
-                            <h4>${order.item}</h4>
-                            <p>${order.id} • ${order.date}</p>
-                        </div>
-                        <div class="order-status-wrapper">
-                            <span class="order-status ${order.status === 'Completed' ? 'status-completed' : 'status-pending'}">
-                                ${order.status}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
         }
 
         // SECURE LOGOUT
