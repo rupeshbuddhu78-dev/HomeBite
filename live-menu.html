@@ -126,7 +126,6 @@
 </head>
 <body>
 
-    <!-- NAVBAR (SYNCED) -->
     <nav class="navbar">
         <a href="index.html" class="logo">Home<span>Bite</span></a>
         
@@ -143,10 +142,9 @@
             <li><a href="login.html" class="btn btn-primary" style="padding: 8px 24px; color: white;">Login / Sign Up</a></li>
         </ul>
 
-        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">☰</div>
+        <div class="menu-toggle" id="menuToggle">☰</div>
     </nav>
 
-    <!-- LIVE FEED HEADER & FILTERS -->
     <div class="feed-header">
         <h1>🔥 Trending Live Food</h1>
         
@@ -175,12 +173,9 @@
         </div>
     </div>
 
-    <!-- FOOD GRID -->
     <div class="food-grid" id="foodGrid">
-        <!-- JS will inject profiles here -->
-    </div>
+        </div>
 
-    <!-- PREMIUM FOOTER -->
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-col">
@@ -276,8 +271,8 @@
                 }, 1000);
             }
         }
-        // ----------------------------------------
 
+        // --- FILTERING LOGIC --- //
         let currentType = 'all';
         let currentCategory = 'all';
 
@@ -349,10 +344,36 @@
             });
         }
 
+        // --- ONLOAD INITIALIZATION --- //
         window.onload = () => {
             renderGrid(allLiveFood);
             updateCartCounter(); 
         };
+
+        // ==========================================
+        // FIX: MOBILE NAVBAR CLOSE LOGIC
+        // ==========================================
+        const navLinks = document.getElementById('navLinks');
+        const menuToggle = document.getElementById('menuToggle');
+
+        // 1. Open/Close menu when clicking the hamburger icon
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // 2. Close menu when clicking ANY link inside the navbar
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // 3. Close menu when clicking ANYWHERE outside the navbar
+        document.addEventListener('click', (event) => {
+            if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
