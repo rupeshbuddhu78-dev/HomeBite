@@ -60,14 +60,6 @@
         .hero-text h1 { font-size: 3.5rem; line-height: 1.15; margin-bottom: 20px; color: var(--dark); font-weight: 800; }
         .hero-text p { font-size: 1.1rem; color: #555; margin-bottom: 30px; line-height: 1.6; max-width: 90%; }
         
-        .search-box {
-            display: flex; background: white; padding: 8px; border-radius: 50px; box-shadow: 0 15px 35px rgba(0,0,0,0.08); max-width: 500px; border: 1px solid #eee; transition: 0.3s;
-        }
-        .search-box:focus-within { box-shadow: 0 15px 35px rgba(255, 107, 0, 0.15); border-color: var(--primary); }
-        .search-icon { padding: 12px 20px; font-size: 1.2rem; }
-        .search-box input { flex: 1; border: none; outline: none; font-size: 1rem; color: var(--dark); font-weight: 500; background: transparent; }
-        .search-box .btn-search { padding: 10px 25px; border-radius: 40px; }
-
         .hero-image { flex: 1; text-align: center; min-width: 300px; position: relative; }
         .hero-image img { width: 100%; max-width: 500px; border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.15); }
         
@@ -78,13 +70,6 @@
         .floating-tag p { font-size: 0.8rem; color: var(--online); font-weight: 600; display: flex; align-items: center; gap: 5px; }
         
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-        /* === ABOUT US SECTION === */
-        .about-section { padding: 80px 5%; background: white; text-align: center; }
-        .about-content { max-width: 800px; margin: 0 auto; }
-        .about-content h2 { font-size: 2.5rem; color: var(--dark); margin-bottom: 20px; font-weight: 800; }
-        .about-content h2 span { color: var(--primary); }
-        .about-content p { font-size: 1.1rem; color: #666; line-height: 1.8; margin-bottom: 30px; }
 
         /* === COMMON SECTION HEADER === */
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
@@ -98,7 +83,6 @@
         .food-card { background: white; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; height: 100%; }
         .food-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: var(--primary); }
         
-        /* Fixed Image Container so it doesn't overflow */
         .food-img { width: 100%; height: 200px; position: relative; flex-shrink: 0; }
         .food-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
         
@@ -120,27 +104,64 @@
         
         .food-desc { font-size: 0.9rem; color: #666; margin-bottom: 20px; line-height: 1.4; flex: 1; }
         
-        /* Fixed Bottom Row for Price and Button */
         .food-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #eee; padding-top: 15px; }
         .food-price { font-size: 1.5rem; font-weight: 800; color: var(--dark); }
         
         .add-btn { background: #fff5ef; color: var(--primary); border: 1px solid #ffe1cd; padding: 8px 25px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1rem; }
         .add-btn:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2); }
 
-        /* === WHATSAPP GROUPS SECTION (RESTORED TO PREVIOUS BEAUTIFUL DESIGN) === */
+        /* === WHATSAPP GROUPS SECTION (ENHANCED) === */
         .groups-section { padding: 80px 5%; background: white; }
         .grid-whatsapp { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
         
-        .group-card { background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px; transition: 0.3s; }
-        .group-card:hover { border-color: var(--whatsapp); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.1); transform: translateY(-3px); }
+        .group-card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 16px; 
+            border: 1px solid #eaeaea; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            transition: all 0.3s ease; 
+        }
+        .group-card:hover { 
+            border-color: var(--whatsapp); 
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.15); 
+            transform: translateY(-5px); 
+        }
         
-        .group-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; }
+        .group-img { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 2px solid #fff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
+        }
         .group-info { flex: 1; }
-        .group-info h3 { font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
-        .group-info p { font-size: 0.85rem; color: #777; display: flex; align-items: center; gap: 5px; }
+        .group-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
+        .group-info p { font-size: 0.85rem; color: #666; display: flex; align-items: center; gap: 5px; }
         
-        .wa-btn { background: var(--whatsapp); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0;}
-        .wa-btn:hover { transform: scale(1.1); box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3); }
+        .wa-btn { 
+            background: var(--whatsapp); 
+            color: white; 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            text-decoration: none; 
+            font-size: 1.3rem; 
+            transition: 0.3s; 
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+        .wa-btn:hover { 
+            transform: scale(1.1) rotate(-5deg); 
+            box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4); 
+        }
 
         /* === PREMIUM FOOTER === */
         .footer { background: var(--dark); color: white; padding: 80px 5% 30px; border-top: 5px solid var(--primary); }
@@ -155,8 +176,9 @@
         .footer-col ul li a:hover { color: var(--primary); padding-left: 5px; }
         .footer-bottom { text-align: center; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); color: #777; font-size: 0.9rem; }
 
-        /* Mobile */
+        /* === RESPONSIVE FIXES (MOBILE) === */
         @media (max-width: 900px) {
+            .navbar { padding: 15px 20px; }
             .nav-links { 
                 position: absolute; top: 100%; left: 0; width: 100%; 
                 background: white; flex-direction: column; padding: 30px 20px; 
@@ -165,9 +187,24 @@
             }
             .nav-links.active { display: flex; }
             .menu-toggle { display: block; }
-            .hero-text h1 { font-size: 2.8rem; }
+            
+            .hero { padding: 120px 5% 60px; flex-direction: column; text-align: center; }
+            .hero-text { min-width: 100%; }
+            .hero-text h1 { font-size: 2.6rem; }
+            .hero-text p { max-width: 100%; margin: 0 auto 30px; }
+            .hero-image { width: 100%; margin-top: 20px; }
+            .hero-image img { width: 100%; max-width: 400px; }
             .floating-tag { display: none; }
+            
+            .section-header { flex-direction: column; align-items: flex-start; text-align: left; }
+            .section-title { font-size: 1.8rem; }
+            
             .grid-8 { grid-template-columns: 1fr; }
+            .food-card { max-width: 100%; }
+            
+            .grid-whatsapp { grid-template-columns: 1fr; }
+            
+            .footer-grid { grid-template-columns: 1fr; gap: 30px; }
         }
     </style>
 </head>
@@ -200,20 +237,26 @@
             <h1>Find the Best <br><span style="color: var(--primary);">Home-Chefs</span> <br>Near Your Hostel.</h1>
             <p>Connect directly with local housewives. Check their weekly routines, see who is cooking live, and subscribe to healthy, affordable monthly tiffins.</p>
             
-            <div class="search-box">
-                <span class="search-icon">📍</span>
-                <input type="text" placeholder="Enter your hostel area (e.g., Boring Road)...">
-                <button class="btn btn-primary btn-search" onclick="window.location.href='live-menu.html'">Search</button>
+            <!-- Replaced Search Box with Responsive Button -->
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="window.location.href='live-menu.html'" style="padding: 14px 35px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 107, 0, 0.3);">Explore Live Menus ➔</button>
             </div>
             <p style="font-size: 0.85rem; color: #888; margin-top: 15px;">Over 50+ Verified Housewives currently online in Patna.</p>
         </div>
         
         <div class="hero-image">
             <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Delicious Thali">
+            <div class="floating-tag">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80" alt="Chef">
+                <div>
+                    <h4>Aarti Sharma</h4>
+                    <p>🟢 Cooking Live Now</p>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- 8 LIVE MENU ITEMS SECTION (FIXED EXACTLY AS IMAGE) -->
+    <!-- 8 LIVE MENU ITEMS SECTION -->
     <section class="live-section">
         <div class="section-header">
             <div>
@@ -386,13 +429,15 @@
         </div>
     </section>
 
-    <!-- 6 WHATSAPP GROUPS SECTION (RESTORED CLEAN DESIGN) -->
+    <!-- 6 WHATSAPP GROUPS SECTION (ENHANCED DESIGN) -->
     <section class="groups-section">
         <div class="section-header">
-            <h2 class="section-title">💬 Join <span style="color: var(--whatsapp);">WhatsApp</span> Groups</h2>
+            <div>
+                <h2 class="section-title">💬 Join <span style="color: var(--whatsapp);">WhatsApp</span> Groups</h2>
+                <p style="color: #666; margin-top: 10px; font-size: 1.05rem;">Join the daily broadcast groups of your favorite chefs to get menu updates directly on WhatsApp.</p>
+            </div>
             <a href="menu.html" class="btn btn-outline" style="border-color: var(--whatsapp); color: var(--whatsapp);">Explore All Groups ➔</a>
         </div>
-        <p style="color: #666; margin-top: -30px; margin-bottom: 30px; font-size: 1.05rem;">Join the daily broadcast groups of your favorite chefs to get menu updates directly on WhatsApp.</p>
 
         <div class="grid-whatsapp">
             <div class="group-card">
@@ -401,7 +446,7 @@
                     <h3>Aarti Veg Kitchen</h3>
                     <p>🔥 142 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Aarti Veg Kitchen" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Aarti Veg Kitchen" target="_blank" class="wa-btn">💬</a>
             </div>
             
             <div class="group-card">
@@ -410,7 +455,7 @@
                     <h3>Sunita Healthy Tiffin</h3>
                     <p>🔥 85 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Sunita Healthy Tiffin" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Sunita Healthy Tiffin" target="_blank" class="wa-btn">💬</a>
             </div>
             
             <div class="group-card">
@@ -419,7 +464,7 @@
                     <h3>Priya Homestyle Food</h3>
                     <p>🔥 110 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Priya Homestyle Food" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Priya Homestyle Food" target="_blank" class="wa-btn">💬</a>
             </div>
             
             <div class="group-card">
@@ -428,7 +473,7 @@
                     <h3>Meena Aunty Rasoi</h3>
                     <p>🔥 60 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Meena Aunty Rasoi" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Meena Aunty Rasoi" target="_blank" class="wa-btn">💬</a>
             </div>
             
             <div class="group-card">
@@ -437,7 +482,7 @@
                     <h3>Anjali Fresh Bites</h3>
                     <p>🔥 95 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Anjali Fresh Bites" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Anjali Fresh Bites" target="_blank" class="wa-btn">💬</a>
             </div>
             
             <div class="group-card">
@@ -446,7 +491,7 @@
                     <h3>Kavita Premium Tiffin</h3>
                     <p>🔥 130 students joined</p>
                 </div>
-                <a href="https://wa.me/1234567890?text=I want to join Kavita Premium Tiffin" target="_blank" class="wa-btn">➔</a>
+                <a href="https://wa.me/1234567890?text=I want to join Kavita Premium Tiffin" target="_blank" class="wa-btn">💬</a>
             </div>
         </div>
     </section>
