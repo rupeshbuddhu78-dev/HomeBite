@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Menu Feed - HomeBite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GLOBAL SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #fdfbf7; color: #333; scroll-behavior: smooth; }
+        :root { --primary: #ff6b00; --secondary: #ff3c00; --whatsapp: #25D366; --dark: #121212; --light-bg: #fff5eb; --border: #eaeaea; }
+
+        /* === PREMIUM NAVBAR === */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px); position: sticky; width: 100%; top: 0; z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .logo { font-size: 28px; font-weight: 800; color: var(--dark); letter-spacing: -1px; text-decoration: none; }
+        .logo span { background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .nav-links { display: flex; gap: 25px; list-style: none; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: 0.3s; padding: 5px 0; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+        
+        /* Cart Button in Nav */
+        .cart-btn { position: relative; font-size: 1.1rem; text-decoration: none; color: var(--dark); display: flex; align-items: center; gap: 5px;}
+        .cart-count { background: var(--secondary); color: white; font-size: 0.75rem; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: absolute; top: -10px; right: -15px; border: 2px solid white; transition: transform 0.2s;}
+        .cart-count.pop { transform: scale(1.4); }
+
+        .menu-toggle { display: none; font-size: 28px; cursor: pointer; color: var(--dark); }
+
+        /* Buttons */
+        .btn { padding: 10px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; display: inline-block; transition: all 0.3s ease; border: none; cursor: pointer; text-align: center; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 8px 20px rgba(255, 107, 0, 0.25); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255, 107, 0, 0.35); color: white; }
+
+        /* === COMPACT PAGE HEADER & SINGLE LINE FILTERS === */
+        .feed-header { padding: 20px 5% 10px; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 65px; z-index: 99; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .feed-header h1 { font-size: 1.6rem; color: var(--dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        /* The Single Line Scrollable Filter Bar */
+        .filter-bar { 
+            display: flex; gap: 10px; align-items: center; overflow-x: auto; 
+            padding-bottom: 10px; scrollbar-width: none; /* Firefox */ 
+        }
+        .filter-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+        
+        .f-pill { 
+            padding: 8px 18px; border-radius: 30px; font-weight: 500; font-size: 0.85rem; 
+            cursor: pointer; border: 1px solid #ddd; background: white; color: #444; 
+            transition: 0.3s; white-space: nowrap; display: flex; align-items: center; gap: 6px; outline: none; 
+        }
+        .f-pill:hover { border-color: var(--primary); color: var(--primary); }
+        .f-pill.active { background: #fff5ef; color: var(--primary); border-color: var(--primary); font-weight: 600; }
+        
+        select.f-pill { cursor: pointer; appearance: none; padding-right: 15px; }
+        
+        .filter-divider { width: 2px; height: 24px; background: #eaeaea; margin: 0 5px; flex-shrink: 0; }
+
+        /* Veg / Non-Veg Icons */
+        .veg-icon { display: inline-block; width: 14px; height: 14px; border: 2px solid #28a745; position: relative; border-radius: 3px; margin-top: 2px;}
+        .veg-icon::after { content: ''; position: absolute; width: 6px; height: 6px; background: #28a745; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .nonveg-icon { border-color: #dc3545; }
+        .nonveg-icon::after { background: #dc3545; border-radius: 0; }
+
+        /* === FOOD GRID === */
+        .food-grid { padding: 30px 5% 80px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; max-width: 1400px; margin: 0 auto; min-height: 50vh; }
+        
+        .food-card { background: white; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; height: 100%;}
+        .food-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); border-color: #ffe1cd; }
+        
+        .food-img { width: 100%; height: 200px; position: relative; flex-shrink: 0; }
+        .food-img img { width: 100%; height: 100%; object-fit: cover; display: block;}
+        .category-tag { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: var(--dark); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .food-details { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .food-title-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
+        .food-title { font-size: 1.2rem; font-weight: 800; color: var(--dark); line-height: 1.2; }
+        
+        .chef-link { font-size: 0.9rem; color: #777; text-decoration: none; margin-bottom: 10px; display: inline-block; transition: 0.2s; font-weight: 500; }
+        .chef-link:hover { color: var(--primary); text-decoration: underline; }
+        
+        .food-desc { font-size: 0.9rem; color: #666; margin-bottom: 15px; line-height: 1.4; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .food-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #eee; padding-top: 15px; }
+        .food-price { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
+        
+        .add-btn { background: #fdf5ef; color: var(--primary); border: 1px solid #ffe1cd; padding: 8px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1rem;}
+        .add-btn:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2); }
+
+        .no-results { text-align: center; grid-column: 1 / -1; padding: 50px; color: #888; font-size: 1.1rem; }
+
+        /* === PREMIUM FOOTER === */
+        .footer { background: var(--dark); color: white; padding: 80px 5% 30px; border-top: 5px solid var(--primary); }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 50px; margin-bottom: 50px; }
+        .footer-col .logo { color: white; margin-bottom: 20px; display: inline-block; }
+        .footer-col p { color: #a0a0a0; line-height: 1.8; margin-bottom: 20px; font-size: 0.95rem; }
+        .footer-col h3 { font-size: 1.3rem; margin-bottom: 25px; color: white; font-weight: 600; position: relative; padding-bottom: 10px; }
+        .footer-col h3::after { content: ''; position: absolute; left: 0; bottom: 0; width: 40px; height: 3px; background: var(--primary); border-radius: 2px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: #a0a0a0; text-decoration: none; transition: 0.3s; }
+        .footer-col ul li a:hover { color: var(--primary); padding-left: 5px; }
+        .footer-bottom { text-align: center; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); color: #777; font-size: 0.9rem; }
+
+        /* === MOBILE RESPONSIVENESS === */
+        @media (max-width: 900px) {
+            .nav-links { 
+                position: absolute; top: 100%; left: 0; width: 100%; 
+                background: white; flex-direction: column; padding: 30px 20px; 
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1); gap: 20px; 
+                display: none; align-items: flex-start;
+            }
+            .nav-links.active { display: flex; }
+            .menu-toggle { display: block; }
+            
+            .feed-header { top: 60px; padding: 15px 5% 5px; }
+            .feed-header h1 { font-size: 1.4rem; margin-bottom: 10px; }
+            .food-grid { padding-top: 20px; grid-template-columns: 1fr; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR (SYNCED) -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">Home<span>Bite</span></a>
+        
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="menu.html">Chefs & Routines</a></li>
+            <li><a href="live-menu.html" class="active">Live Food</a></li>
+            <li><a href="profile.html">My Profile</a></li>
+            <li>
+                <a href="cart.html" class="cart-btn">
+                    Cart 🛒<span class="cart-count" id="navCartCount">0</span>
+                </a>
+            </li>
+            <li><a href="login.html" class="btn btn-primary" style="padding: 8px 24px; color: white;">Login / Sign Up</a></li>
+        </ul>
+
+        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">☰</div>
+    </nav>
+
+    <!-- LIVE FEED HEADER & FILTERS -->
+    <div class="feed-header">
+        <h1>🔥 Trending Live Food</h1>
+        
+        <div class="filter-bar">
+            
+            <select class="f-pill" id="priceSort" onchange="applyFilters()">
+                <option value="default">↕ Sort: Relevance</option>
+                <option value="low">↑ Price: Low to High</option>
+                <option value="high">↓ Price: High to Low</option>
+            </select>
+            
+            <div class="filter-divider"></div>
+
+            <button class="f-pill active" data-type="all" onclick="setFilter('type', 'all')">All Diet</button>
+            <button class="f-pill" data-type="veg" onclick="setFilter('type', 'veg')"><span class="veg-icon"></span> Veg</button>
+            <button class="f-pill" data-type="nonveg" onclick="setFilter('type', 'nonveg')"><span class="veg-icon nonveg-icon"></span> Non-Veg</button>
+            
+            <div class="filter-divider"></div>
+
+            <button class="f-pill active" data-cat="all" onclick="setFilter('category', 'all')">All Categories</button>
+            <button class="f-pill" data-cat="thali" onclick="setFilter('category', 'thali')">🍱 Thalis</button>
+            <button class="f-pill" data-cat="snacks" onclick="setFilter('category', 'snacks')">🍟 Snacks</button>
+            <button class="f-pill" data-cat="healthy" onclick="setFilter('category', 'healthy')">🥗 Healthy</button>
+            <button class="f-pill" data-cat="biryani" onclick="setFilter('category', 'biryani')">🍛 Biryani</button>
+            
+        </div>
+    </div>
+
+    <!-- FOOD GRID -->
+    <div class="food-grid" id="foodGrid">
+        <!-- JS will inject profiles here -->
+    </div>
+
+    <!-- PREMIUM FOOTER -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo">Home<span>Bite</span></div>
+                <p>Empowering local kitchens. Revolutionizing student meals. We are on a mission to ensure no student in Patna sleeps hungry or eats unhygienic food ever again.</p>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">➔ Home</a></li>
+                    <li><a href="live-menu.html">➔ Order Live Food</a></li>
+                    <li><a href="menu.html">➔ Browse All Chefs</a></li>
+                    <li><a href="cart.html">➔ View Cart</a></li>
+                    <li><a href="profile.html">➔ My Profile</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Contact Support</h3>
+                <p>📍 Boring Road, Patna, Bihar</p>
+                <p>📞 +91 98765 43210</p>
+                <p>✉️ hello@homebite.in</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 HomeBite Tiffin Services. Designed with ❤️ for students.</p>
+            <p>Privacy Policy | Terms of Service | Contact Support</p>
+        </div>
+    </footer>
+
+    <script>
+        // UNIFIED LIVE FOOD DATABASE
+        const allLiveFood = [
+            { id: 101, chefId: 1, chefName: "Aarti Sharma", name: "Special Rajma Chawal", desc: "Punjabi style rajma with jeera rice & onion salad.", price: 80, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80" },
+            { id: 102, chefId: 1, chefName: "Aarti Sharma", name: "Aloo Paratha (2 pcs)", desc: "Stuffed aloo paratha served with fresh curd.", price: 60, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=400&q=80" },
+            { id: 103, chefId: 2, chefName: "Sunita Verma", name: "Healthy Diet Thali", desc: "Brown rice, mixed dal, boiled green sabzi & salad.", price: 90, type: "veg", category: "healthy", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80" },
+            { id: 104, chefId: 2, chefName: "Sunita Verma", name: "Sprouts Protein Salad", desc: "Protein rich moong sprouts with paneer cubes.", price: 50, type: "veg", category: "healthy", img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80" },
+            { id: 105, chefId: 3, chefName: "Priya Singh", name: "Chicken Dum Biryani", desc: "Aromatic chicken biryani with fresh mint raita.", price: 100, type: "nonveg", category: "biryani", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=400&q=80" },
+            { id: 106, chefId: 3, chefName: "Priya Singh", name: "Egg Curry & Rice", desc: "2 eggs in spicy homestyle gravy with rice.", price: 80, type: "nonveg", category: "thali", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=400&q=80" },
+            { id: 107, chefId: 4, chefName: "Meena Aunty", name: "Authentic Litti Chokha", desc: "4 Littis dipped in pure ghee with baingan chokha.", price: 70, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=400&q=80" },
+            { id: 108, chefId: 5, chefName: "Anjali Gupta", name: "Chole Bhature (2 pcs)", desc: "Delhi style spicy chole with 2 fluffy bhaturas.", price: 80, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=400&q=80" },
+            { id: 109, chefId: 6, chefName: "Kavita Yadav", name: "Home-style Chicken Curry", desc: "Tender chicken cooked in basic home spices with 4 roti.", price: 95, type: "nonveg", category: "thali", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80" },
+            { id: 110, chefId: 7, chefName: "Rekha Jha", name: "Mithila Special Veg Thali", desc: "Rice, Dal, Tarua (fritters), Mix Sabzi, Papar.", price: 90, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80" },
+            { id: 111, chefId: 8, chefName: "Neelam Pandey", name: "Dal Makhani & Jeera Rice", desc: "Creamy overnight cooked dal makhani with rice.", price: 85, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400&q=80" },
+            { id: 112, chefId: 9, chefName: "Pooja Mishra", name: "Masala Dosa", desc: "Crispy dosa served with sambar and coconut chutney.", price: 70, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?auto=format&fit=crop&w=400&q=80" }
+        ];
+
+        // --- CART LOGIC WITH LOCALSTORAGE --- //
+        let cartArray = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
+
+        function updateCartCounter() {
+            const countSpan = document.getElementById('navCartCount');
+            const totalItems = cartArray.reduce((total, item) => total + item.quantity, 0);
+            countSpan.innerText = totalItems;
+            
+            // Pop animation
+            countSpan.classList.add('pop');
+            setTimeout(() => countSpan.classList.remove('pop'), 300);
+        }
+
+        function addToCart(itemId, btnElement) {
+            const foodItem = allLiveFood.find(item => item.id === itemId);
+            if(foodItem) {
+                const existingItem = cartArray.find(item => item.id === itemId);
+                if(existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cartArray.push({
+                        id: foodItem.id,
+                        name: foodItem.name,
+                        chefName: foodItem.chefName,
+                        basePrice: foodItem.price,
+                        quantity: 1,
+                        img: foodItem.img
+                    });
+                }
+                
+                localStorage.setItem('homeBiteCart', JSON.stringify(cartArray));
+                updateCartCounter();
+
+                // Button visual feedback
+                const originalText = btnElement.innerText;
+                btnElement.innerText = "ADDED ✓";
+                btnElement.style.background = "var(--primary)";
+                btnElement.style.color = "white";
+                
+                setTimeout(() => {
+                    btnElement.innerText = "ADD";
+                    btnElement.style.background = "#fff5ef";
+                    btnElement.style.color = "var(--primary)";
+                }, 1000);
+            }
+        }
+        // ----------------------------------------
+
+        let currentType = 'all';
+        let currentCategory = 'all';
+
+        function setFilter(filterGroup, value) {
+            if(filterGroup === 'type') {
+                currentType = value;
+                document.querySelectorAll('[data-type]').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-type="${value}"]`).classList.add('active');
+            } else if (filterGroup === 'category') {
+                currentCategory = value;
+                document.querySelectorAll('[data-cat]').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-cat="${value}"]`).classList.add('active');
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filteredData = allLiveFood.filter(item => {
+                const matchType = (currentType === 'all') || (item.type === currentType);
+                const matchCategory = (currentCategory === 'all') || (item.category === currentCategory);
+                return matchType && matchCategory;
+            });
+
+            const sortValue = document.getElementById('priceSort').value;
+            if(sortValue === 'low') {
+                filteredData.sort((a, b) => a.price - b.price);
+            } else if (sortValue === 'high') {
+                filteredData.sort((a, b) => b.price - a.price);
+            }
+
+            renderGrid(filteredData);
+        }
+
+        function renderGrid(data) {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = '';
+
+            if(data.length === 0) {
+                grid.innerHTML = `<div class="no-results">😔 Oops! No dishes found for this filter combination.</div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const isVeg = item.type === 'veg';
+                const iconClass = isVeg ? 'veg-icon' : 'veg-icon nonveg-icon';
+                
+                const card = `
+                    <div class="food-card">
+                        <div class="food-img">
+                            <span class="category-tag">${item.category.toUpperCase()}</span>
+                            <img src="${item.img}" alt="${item.name}">
+                        </div>
+                        <div class="food-details">
+                            <div class="food-title-row">
+                                <span class="${iconClass}"></span>
+                                <h3 class="food-title">${item.name}</h3>
+                            </div>
+                            <a href="routine.html?id=${item.chefId}" class="chef-link">👩‍🍳 By ${item.chefName}</a>
+                            <p class="food-desc">${item.desc}</p>
+                            
+                            <div class="food-bottom">
+                                <div class="food-price">₹${item.price}</div>
+                                <button onclick="addToCart(${item.id}, this)" class="add-btn">ADD</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        window.onload = () => {
+            renderGrid(allLiveFood);
+            updateCartCounter(); 
+        };
+    </script>
+</body>
+</html>

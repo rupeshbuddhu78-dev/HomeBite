@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeBite - All Home-Chefs & Routines</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GLOBAL SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #fdfbf7; color: #333; overflow-x: hidden; scroll-behavior: smooth; }
+        
+        :root {
+            --primary: #ff6b00;
+            --secondary: #ff3c00;
+            --whatsapp: #25D366;
+            --dark: #121212;
+            --light-bg: #fff5eb;
+            --border: #eaeaea;
+        }
+
+        /* === PREMIUM NAVBAR (SYNCED WITH INDEX) === */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px); position: sticky; width: 100%; top: 0; z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .logo { font-size: 28px; font-weight: 800; color: var(--dark); letter-spacing: -1px; text-decoration: none; }
+        .logo span { background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .nav-links { display: flex; gap: 25px; list-style: none; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: 0.3s; padding: 5px 0; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+        
+        /* Cart Button in Nav */
+        .cart-btn { position: relative; font-size: 1.1rem; text-decoration: none; color: var(--dark); display: flex; align-items: center; gap: 5px;}
+        .cart-count { background: var(--secondary); color: white; font-size: 0.75rem; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: absolute; top: -10px; right: -15px; border: 2px solid white;}
+
+        .menu-toggle { display: none; font-size: 28px; cursor: pointer; color: var(--dark); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 8px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; box-shadow: 0 8px 20px rgba(255, 107, 0, 0.25); transition: 0.3s; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255, 107, 0, 0.35); }
+
+        /* === HEADER SECTION === */
+        .page-header { padding: 60px 5% 40px; text-align: center; background: radial-gradient(circle at top, var(--light-bg), transparent); }
+        .page-header h1 { font-size: 2.8rem; color: var(--dark); font-weight: 800; margin-bottom: 15px; }
+        .page-header p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+        /* === CHEF GRID & ANIMATIONS === */
+        .chef-grid { padding: 20px 5% 80px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 35px; max-width: 1300px; margin: 0 auto; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chef-card { 
+            background: white; border-radius: 20px; padding: 25px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            border: 1px solid #eaeaea; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0; /* Starts hidden for animation */
+        }
+        
+        .chef-card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 20px 40px rgba(255, 107, 0, 0.08); 
+            border-color: #ffe1cd; 
+        }
+
+        .chef-profile { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+        .chef-profile img { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #fbe6d4; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        .chef-info-text { flex: 1; }
+        .chef-info-text h3 { font-size: 1.4rem; color: var(--dark); line-height: 1.2; margin-bottom: 6px; font-weight: 700; }
+        .wa-group { color: var(--whatsapp); font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 4px; }
+        .students-count { font-size: 0.85rem; color: #777; display: flex; align-items: center; gap: 5px; }
+
+        .view-btn { width: 100%; padding: 14px; border-radius: 12px; background: #fdf5ef; color: var(--primary); font-weight: 700; text-align: center; border: 1px solid #ffe1cd; cursor: pointer; transition: 0.3s; margin-top: auto; font-size: 1rem; }
+        .chef-card:hover .view-btn { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* === PREMIUM FOOTER === */
+        .footer { background: var(--dark); color: white; padding: 80px 5% 30px; margin-top: 20px; border-top: 5px solid var(--primary); }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 50px; margin-bottom: 50px; }
+        .footer-col .logo { color: white; margin-bottom: 20px; display: inline-block; }
+        .footer-col p { color: #a0a0a0; line-height: 1.8; margin-bottom: 20px; font-size: 0.95rem; }
+        .footer-col h3 { font-size: 1.3rem; margin-bottom: 25px; color: white; font-weight: 600; position: relative; padding-bottom: 10px; }
+        .footer-col h3::after { content: ''; position: absolute; left: 0; bottom: 0; width: 40px; height: 3px; background: var(--primary); border-radius: 2px; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: #a0a0a0; text-decoration: none; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .footer-col ul li a:hover { color: var(--primary); transform: translateX(5px); }
+        .footer-bottom { text-align: center; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); color: #777; font-size: 0.9rem; }
+
+        /* === MOBILE RESPONSIVENESS === */
+        @media (max-width: 900px) {
+            .nav-links { 
+                position: absolute; top: 100%; left: 0; width: 100%; 
+                background: white; flex-direction: column; padding: 30px 20px; 
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1); gap: 20px; 
+                display: none; align-items: flex-start;
+            }
+            .nav-links.active { display: flex; }
+            .menu-toggle { display: block; }
+            .page-header { padding: 40px 5% 20px; }
+            .page-header h1 { font-size: 2.2rem; }
+            .chef-grid { grid-template-columns: 1fr; gap: 25px; padding-top: 10px; } 
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">Home<span>Bite</span></a>
+        
+        <ul class="nav-links" id="navLinks">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="menu.html" class="active">Chefs & Routines</a></li>
+            <li><a href="live-menu.html">Live Food</a></li>
+            <li><a href="profile.html">My Profile</a></li>
+            <li>
+                <a href="cart.html" class="cart-btn">
+                    Cart 🛒<span class="cart-count" id="navCartCount">0</span>
+                </a>
+            </li>
+            <li><a href="login.html" class="btn-primary">Login / Sign Up</a></li>
+        </ul>
+
+        <div class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('active')">☰</div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Explore Home-Chefs</h1>
+        <p>Browse through our verified local housewives. View their complete weekly routine, today's menu, and join their WhatsApp community.</p>
+    </header>
+
+    <div class="chef-grid" id="chefGrid">
+        </div>
+
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="logo">Home<span>Bite</span></div>
+                <p>Empowering local kitchens. Revolutionizing student meals. We are on a mission to ensure no student in Patna sleeps hungry or eats unhygienic food ever again.</p>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">➔ Home</a></li>
+                    <li><a href="live-menu.html">➔ Order Live Food</a></li>
+                    <li><a href="menu.html">➔ Browse All Chefs</a></li>
+                    <li><a href="cart.html">➔ View Cart</a></li>
+                    <li><a href="profile.html">➔ My Profile</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h3>Contact Support</h3>
+                <p>📍 Boring Road, Patna, Bihar</p>
+                <p>📞 +91 98765 43210</p>
+                <p>✉️ hello@homebite.in</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 HomeBite Tiffin Services. Designed with ❤️ for students.</p>
+            <p>Privacy Policy | Terms of Service | Contact Support</p>
+        </div>
+    </footer>
+
+    <script>
+        // Update cart count on load
+        function updateCartCount() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let count = cart.reduce((total, item) => total + item.quantity, 0);
+            document.getElementById('navCartCount').innerText = count;
+        }
+
+        // MOCK DATABASE
+        const chefsDB = [
+            { id: 1, name: "Aarti Sharma", group: "Aarti Veg Kitchen", students: 142, img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" },
+            { id: 2, name: "Sunita Verma", group: "Sunita Healthy Tiffin", students: 85, img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" },
+            { id: 3, name: "Priya Singh", group: "Priya Homestyle Food", students: 110, img: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=150&q=80" },
+            { id: 4, name: "Meena Devi", group: "Meena Aunty Rasoi", students: 60, img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=150&q=80" },
+            { id: 5, name: "Anjali Gupta", group: "Anjali Fresh Bites", students: 95, img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80" },
+            { id: 6, name: "Kavita Yadav", group: "Kavita Premium Tiffin", students: 130, img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=150&q=80" },
+            { id: 7, name: "Rekha Jha", group: "Rekha Mithila Food", students: 48, img: "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?auto=format&fit=crop&w=150&q=80" },
+            { id: 8, name: "Neelam Pandey", group: "Neelam Pure Veg", students: 75, img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=150&q=80" },
+            { id: 9, name: "Pooja Mishra", group: "Pooja Dabba Service", students: 42, img: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&w=150&q=80" },
+            { id: 10, name: "Sushma Kumari", group: "Sushma Diet Kitchen", students: 58, img: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=150&q=80" }
+        ];
+
+        // Render Cards with Staggered Animation
+        function renderCards() {
+            const grid = document.getElementById('chefGrid');
+            grid.innerHTML = ''; 
+
+            chefsDB.forEach((chef, index) => {
+                // Add staggered animation delay so they load one by one beautifully
+                const delay = index * 0.1; 
+                
+                const cardHTML = `
+                    <div class="chef-card" style="animation-delay: ${delay}s;" onclick="window.location.href='routine.html?id=${chef.id}'">
+                        <div class="chef-profile">
+                            <img src="${chef.img}" alt="${chef.name}">
+                            <div class="chef-info-text">
+                                <h3>${chef.name}</h3>
+                                <div class="wa-group">💬 ${chef.group}</div>
+                                <div class="students-count">🔥 ${chef.students} students joined</div>
+                            </div>
+                        </div>
+                        <button class="view-btn">View Menu & Routine ➔</button>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            });
+        }
+
+        // Initial Load
+        window.onload = () => {
+            updateCartCount();
+            renderCards();
+        };
+    </script>
+</body>
+</html>

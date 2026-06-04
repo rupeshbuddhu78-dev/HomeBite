@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - HomeBite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GLOBAL SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #fdfbf7; color: #333; scroll-behavior: smooth; }
+        :root { --primary: #ff6b00; --secondary: #ff3c00; --whatsapp: #25D366; --dark: #121212; --border: #eaeaea; }
+
+        /* Navbar */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 800; color: var(--dark); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .back-btn { text-decoration: none; color: #555; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { color: var(--primary); }
+
+        /* Main Container */
+        .cart-container { max-width: 1100px; margin: 30px auto; padding: 0 5%; display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
+        
+        /* Left Column */
+        .cart-left { flex: 1.4; min-width: 320px; display: flex; flex-direction: column; gap: 25px; }
+        .cart-block { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+        .section-title { font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+
+        /* Cart Items */
+        .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed var(--border); gap: 15px; }
+        .cart-item:last-child { border-bottom: none; }
+        .item-details { display: flex; align-items: center; gap: 15px; }
+        .item-details img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; }
+        .item-info h4 { font-size: 1.05rem; font-weight: 700; color: var(--dark); }
+        .item-info p { font-size: 0.8rem; color: #777; margin-top: 2px; }
+
+        /* Payment Options */
+        .payment-option { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; }
+        .payment-option:hover { border-color: var(--primary); background: #fffaf5; }
+        .payment-option input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; }
+        .payment-details h4 { font-size: 1rem; color: var(--dark); }
+        .payment-details p { font-size: 0.8rem; color: #777; }
+
+        /* Counter & Price */
+        .quantity-counter { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fafafa; }
+        .counter-btn { background: none; border: none; width: 32px; height: 32px; font-size: 1.1rem; font-weight: 600; cursor: pointer; color: var(--primary); }
+        .count-value { width: 30px; text-align: center; font-weight: 600; font-size: 0.95rem; }
+        .item-price { font-size: 1.1rem; font-weight: 700; color: var(--dark); min-width: 70px; text-align: right; }
+
+        /* Right Column */
+        .cart-right { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border); position: sticky; top: 100px; }
+        .bill-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #666; font-weight: 500; }
+        .bill-row.total { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+        
+        .checkout-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #25D366, #1da851); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25); transition: 0.3s; }
+        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(37, 211, 102, 0.35); }
+
+        @media (max-width: 768px) { .cart-container { flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="live-menu.html" class="back-btn">⬅ Continue Ordering</a>
+        <a href="index.html" class="logo">Home<span>Bite</span></a>
+    </nav>
+
+    <div class="cart-container" id="cartContainer">
+        <div class="cart-left">
+            <div class="cart-block">
+                <h2 class="section-title">🛒 Review Items</h2>
+                <div id="cartItemsList"></div>
+            </div>
+
+            <div class="cart-block">
+                <h2 class="section-title">💳 Payment Method</h2>
+                <label class="payment-option">
+                    <input type="radio" name="paymentMethod" value="COD" checked>
+                    <div class="payment-details">
+                        <h4>Cash on Delivery (COD)</h4>
+                        <p>Pay cash or scan UPI when your tiffin arrives.</p>
+                    </div>
+                </label>
+                <label class="payment-option">
+                    <input type="radio" name="paymentMethod" value="Online">
+                    <div class="payment-details">
+                        <h4>Online Payment</h4>
+                        <p>Pay via UPI/GPay/PhonePe before delivery.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="cart-right">
+            <h2 class="section-title">📄 Bill Details</h2>
+            <div class="bill-row"><span>Item Total</span><span id="billSubtotal">₹0</span></div>
+            <div class="bill-row"><span>Delivery Partner Fee</span><span>₹15</span></div>
+            <div class="bill-row"><span>Govt Taxes & Packing</span><span>₹10</span></div>
+            <div class="bill-row total"><span>To Pay</span><span id="billGrandTotal" style="color: var(--primary);">₹0</span></div>
+            <button class="checkout-btn" onclick="checkoutOrder()">📱 Place Order via WhatsApp</button>
+        </div>
+    </div>
+
+    <script>
+        let cart = [
+            { id: 101, name: "Special Rajma Chawal", chefName: "Aarti Sharma", basePrice: 80, quantity: 1, img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
+            { id: 105, name: "Chicken Dum Biryani", chefName: "Priya Singh", basePrice: 150, quantity: 1, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=150&q=80" }
+        ];
+
+        const deliveryFee = 15;
+        const taxesFee = 10;
+
+        function updateCartUI() {
+            const listContainer = document.getElementById('cartItemsList');
+            listContainer.innerHTML = '';
+            let subtotal = 0;
+
+            cart.forEach((item, index) => {
+                let itemTotalCost = item.basePrice * item.quantity;
+                subtotal += itemTotalCost;
+                listContainer.innerHTML += `
+                    <div class="cart-item">
+                        <div class="item-details">
+                            <img src="${item.img}" alt="${item.name}">
+                            <div class="item-info"><h4>${item.name}</h4><p>👩‍🍳 By ${item.chefName}</p></div>
+                        </div>
+                        <div class="quantity-counter">
+                            <button class="counter-btn" onclick="changeQty(${index}, -1)">-</button>
+                            <span class="count-value">${item.quantity}</span>
+                            <button class="counter-btn" onclick="changeQty(${index}, 1)">+</button>
+                        </div>
+                        <div class="item-price">₹${itemTotalCost}</div>
+                    </div>`;
+            });
+
+            document.getElementById('billSubtotal').innerText = `₹${subtotal}`;
+            document.getElementById('billGrandTotal').innerText = `₹${subtotal + deliveryFee + taxesFee}`;
+        }
+
+        function changeQty(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function checkoutOrder() {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            let message = `*--- New Tiffin Order (HomeBite) ---*%0A%0A`;
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                let cost = item.basePrice * item.quantity;
+                subtotal += cost;
+                message += `▪️ *${item.name}* (x${item.quantity}) - ₹${cost}%0A`;
+                message += `   _Chef: ${item.chefName}_%0A%0A`;
+            });
+
+            let grandTotal = subtotal + deliveryFee + taxesFee;
+            message += `*Payment Method:* ${paymentMethod}%0A`;
+            message += `-------------------------%0A`;
+            message += `*Total Amount:* 🎉 *₹${grandTotal}*%0A%0A`;
+            message += `📍 _Please deliver to my Hostel Room._`;
+
+            window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
+        }
+
+        window.onload = updateCartUI;
+    </script>
+</body>
+</html>
