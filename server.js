@@ -229,6 +229,84 @@ app.post('/api/change-password', async (req, res) => {
     }
 });
 
+
+// ==========================================
+// 6. PLACE NEW ORDER API (Supabase)
+// ==========================================
+app.post('/api/orders', async (req, res) => {
+    const { userId, cookId, items, grandTotal, paymentMethod } = req.body;
+
+    try {
+        // Step 1: `orders` table mein entry banayein
+        const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .insert([{
+                user_id: userId,
+                cook_id: cookId, // NOTE: Yeh Supabase ka valid UUID hona chahiye
+                total_amount: grandTotal,
+                status: 'Pending',
+                payment_status: paymentMethod === 'Online' ? 'Paid' : 'Unpaid'
+            }])
+            .select()
+            .single();
+
+        if (orderError) {
+            console.error("Order Insert Error:", orderError);
+            return res.status(400).json({ success: false, message: orderError.message });
+        }
+
+        const orderId = orderData.id;
+
+        // Step 2: `order_items` table mein cart ke items save karein
+        const orderItemsArray = items.map(item => ({
+            order_id: orderId,
+            food_id: item.foodId, // NOTE: Yeh bhi valid UUID hona chahiye
+            quantity: item.quantity,
+            price: item.price
+        }));
+
+        const { error: itemsError } = await supabase
+            .from('order_items')
+            .insert(orderItemsArray);
+
+        if (itemsError) {
+            console.error("Order Items Insert Error:", itemsError);
+            return res.status(400).json({ success: false, message: itemsError.message });
+        }
+
+        return res.status(201).json({ success: true, message: "Order Placed Successfully!", orderId: orderId });
+
+    } catch (err) {
+        console.error("Checkout Error:", err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 7. GET ORDER HISTORY API (Supabase)
+// ==========================================
+app.get('/api/orders/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // user_id ke basis par orders nikalo
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select(`
+                id, total_amount, status, payment_status, created_at,
+                order_items ( quantity, price, food_items ( name ) )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, orders });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Wildcard Route
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
