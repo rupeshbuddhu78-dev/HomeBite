@@ -171,8 +171,6 @@
         </div>
     </div>
 
-    <!-- SUPABASE CLIENT SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         function updateCartCount() {
             let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
@@ -180,11 +178,6 @@
             document.getElementById('navCartCount').innerText = count;
         }
         window.onload = updateCartCount;
-
-        const SUPABASE_URL = 'https://gjpfvsibjlcvhmgtaktc.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqcGZ2c2liamxjdmhtZ3Rha3RjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDU2ODc2MSwiZXhwIjoyMDk2MTQ0NzYxfQ.D5OrDxBX2GE1egyWo2u2Nc1R3TpbU-8nlWBkpLI_pEk';
-
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         async function handleSignup(e) {
             e.preventDefault();
@@ -199,41 +192,26 @@
             const phone = document.getElementById('phone').value;
             const address = document.getElementById('address').value;
 
-            if(supabase) {
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: fullname,
-                            phone_number: phone,
-                            hostel_address: address
-                        }
-                    }
+            try {
+                // Yahan se request seedha Node.js backend ko ja rahi hai
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, phone, email, address, password })
                 });
 
-                if (error) {
-                    alert("Signup Failed: " + error.message);
-                    btn.innerText = "Create Account";
-                    btn.disabled = false;
-                } else {
-                    if(data.user) {
-                        const { error: dbError } = await supabase
-                            .from('users')
-                            .insert([
-                                { id: data.user.id, name: fullname, phone: phone, address: address }
-                            ]);
-                        
-                        if(dbError) {
-                            console.log("Database mein user details save karte waqt issue aaya:", dbError);
-                        }
-                    }
-                    
+                const data = await response.json();
+
+                if (data.success) {
                     alert("Account Created Successfully! Aapka account ban gaya hai.");
                     window.location.href = 'login.html'; 
+                } else {
+                    alert("Signup Failed: " + data.message);
                 }
-            } else {
-                alert("Supabase is not connected.");
+            } catch (error) {
+                console.error("Error during signup:", error);
+                alert("Server se connect nahi ho paya! Please try again.");
+            } finally {
                 btn.innerText = "Create Account";
                 btn.disabled = false;
             }
