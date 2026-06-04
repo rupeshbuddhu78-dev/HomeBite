@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -8,23 +9,32 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // JSON data read karne ke liye
+app.use(express.json());
 
-// Supabase Database Connection
+// Frontend files (HTML, CSS, JS) ko host karne ke liye
+app.use(express.static(__dirname));
+
+// Supabase Database Setup
+// Render par jo keys daali hain, wo yahan automatic aayengi
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("❌ ERROR: Supabase Keys missing! Ensure they are added in Render Env or .env file.");
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Connection Check (Aapki request ke anusar)
-async function checkDatabaseConnection() {
+// Check if database is connected
+async function testConnection() {
     const { data, error } = await supabase.from('users').select('id').limit(1);
     if (error) {
-        console.error("❌ Database Connection Failed:", error.message);
+        console.error("❌ Database Connection Error:", error.message);
     } else {
         console.log("✅ Successfully connected to Supabase Database!");
     }
 }
-checkDatabaseConnection();
+testConnection();
 
 // ==========================================
 // 1. SIGNUP API (Create Account)
@@ -33,7 +43,7 @@ app.post('/api/signup', async (req, res) => {
     const { fullname, phone, email, address, password } = req.body;
 
     try {
-        // Step 1: Supabase Auth mein user banayein
+        // Step 1: User ko Authentication table mein banayein
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
@@ -45,7 +55,7 @@ app.post('/api/signup', async (req, res) => {
 
         const userId = authData.user.id;
 
-        // Step 2: Aapki 'users' table mein data insert karein
+        // Step 2: User details ko 'users' table mein insert karein
         const { error: dbError } = await supabase
             .from('users')
             .insert([{ 
@@ -57,13 +67,13 @@ app.post('/api/signup', async (req, res) => {
 
         if (dbError) {
             console.error("DB Error:", dbError);
-            return res.status(500).json({ success: false, message: "Auth successful but failed to save user details." });
+            return res.status(500).json({ success: false, message: "Authentication successful, but failed to save profile details." });
         }
 
-        res.status(201).json({ success: true, message: "Account Created Successfully!" });
+        return res.status(201).json({ success: true, message: "Account Created Successfully!" });
 
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server Error", error: err.message });
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 });
 
@@ -83,24 +93,24 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ success: false, message: error.message });
         }
 
-        res.status(200).json({ 
+        return res.status(200).json({ 
             success: true, 
-            message: "Login Successful", 
+            message: "Login Successful!", 
             token: data.session.access_token,
             user: data.user 
         });
 
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server Error", error: err.message });
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
 });
 
-// Default Route
-app.get('/', (req, res) => {
-    res.send("HomeBite API is running...");
+// Agar URL galat type hua toh seedha index.html (Home Page) dikhao
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Start Server
+// Server Start karo
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🚀 Server is running on port ${PORT}`);
 });
