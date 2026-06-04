@@ -53,8 +53,11 @@
         .bill-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #666; font-weight: 500; }
         .bill-row.total { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; font-size: 1.2rem; font-weight: 700; color: var(--dark); }
         
-        .checkout-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #25D366, #1da851); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25); transition: 0.3s; }
-        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(37, 211, 102, 0.35); }
+        .checkout-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; box-shadow: 0 8px 20px rgba(255, 107, 0, 0.25); transition: 0.3s; }
+        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(255, 107, 0, 0.35); }
+        .checkout-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        .empty-cart-msg { text-align: center; padding: 40px 20px; color: #888; font-size: 1.1rem; }
 
         @media (max-width: 768px) { .cart-container { flex-direction: column; } }
     </style>
@@ -98,23 +101,37 @@
             <div class="bill-row"><span>Delivery Partner Fee</span><span>₹15</span></div>
             <div class="bill-row"><span>Govt Taxes & Packing</span><span>₹10</span></div>
             <div class="bill-row total"><span>To Pay</span><span id="billGrandTotal" style="color: var(--primary);">₹0</span></div>
-            <button class="checkout-btn" onclick="checkoutOrder()">📱 Place Order via WhatsApp</button>
+            <button class="checkout-btn" id="payBtn" onclick="checkoutOrder()">📦 Place Order</button>
         </div>
     </div>
 
     <script>
-        let cart = [
-            { id: 101, name: "Special Rajma Chawal", chefName: "Aarti Sharma", basePrice: 80, quantity: 1, img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-            { id: 105, name: "Chicken Dum Biryani", chefName: "Priya Singh", basePrice: 150, quantity: 1, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=150&q=80" }
-        ];
+        // Fetch cart data from localStorage
+        let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
+        
+        // Fetch Logged-in user from localStorage
+        let loggedInUser = JSON.parse(localStorage.getItem('homeBiteUser'));
 
         const deliveryFee = 15;
         const taxesFee = 10;
+        let subtotal = 0;
+        let grandTotal = 0;
 
         function updateCartUI() {
             const listContainer = document.getElementById('cartItemsList');
+            const payBtn = document.getElementById('payBtn');
             listContainer.innerHTML = '';
-            let subtotal = 0;
+            subtotal = 0;
+
+            if (cart.length === 0) {
+                listContainer.innerHTML = `<div class="empty-cart-msg">😔 Your cart is empty! Go add some delicious food.</div>`;
+                document.getElementById('billSubtotal').innerText = `₹0`;
+                document.getElementById('billGrandTotal').innerText = `₹0`;
+                payBtn.disabled = true;
+                return;
+            }
+
+            payBtn.disabled = false;
 
             cart.forEach((item, index) => {
                 let itemTotalCost = item.basePrice * item.quantity;
@@ -134,35 +151,74 @@
                     </div>`;
             });
 
+            grandTotal = subtotal + deliveryFee + taxesFee;
             document.getElementById('billSubtotal').innerText = `₹${subtotal}`;
-            document.getElementById('billGrandTotal').innerText = `₹${subtotal + deliveryFee + taxesFee}`;
+            document.getElementById('billGrandTotal').innerText = `₹${grandTotal}`;
         }
 
         function changeQty(index, change) {
             cart[index].quantity += change;
-            if (cart[index].quantity <= 0) cart.splice(index, 1);
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            localStorage.setItem('homeBiteCart', JSON.stringify(cart));
             updateCartUI();
         }
 
-        function checkoutOrder() {
+        // Send Data to Backend API
+        async function checkoutOrder() {
+            if(!loggedInUser) {
+                alert("Please login first to place an order!");
+                window.location.href = "login.html";
+                return;
+            }
+
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-            let message = `*--- New Tiffin Order (HomeBite) ---*%0A%0A`;
-            let subtotal = 0;
+            const payBtn = document.getElementById('payBtn');
 
-            cart.forEach(item => {
-                let cost = item.basePrice * item.quantity;
-                subtotal += cost;
-                message += `▪️ *${item.name}* (x${item.quantity}) - ₹${cost}%0A`;
-                message += `   _Chef: ${item.chefName}_%0A%0A`;
-            });
+            // NOTE: Database me `cook_id` ki zarurat hai. Agar cart me items hain, toh hum pehle item ka chef_id nikalenge.
+            // *Zaruri Baat: Jab aap original Supabase UUIDs dalenge, toh cart item mein valid 'chefId' pass hona chahiye.
+            let firstChefId = cart.length > 0 ? cart[0].chefId : null;
 
-            let grandTotal = subtotal + deliveryFee + taxesFee;
-            message += `*Payment Method:* ${paymentMethod}%0A`;
-            message += `-------------------------%0A`;
-            message += `*Total Amount:* 🎉 *₹${grandTotal}*%0A%0A`;
-            message += `📍 _Please deliver to my Hostel Room._`;
+            const orderPayload = {
+                userId: loggedInUser.id, 
+                cookId: firstChefId, // Assumes order belongs to 1 chef
+                items: cart.map(item => ({
+                    foodId: item.id, // Original Database se aaya food UUID
+                    price: item.basePrice,
+                    quantity: item.quantity
+                })),
+                grandTotal: grandTotal,
+                paymentMethod: paymentMethod
+            };
 
-            window.open(`https://wa.me/1234567890?text=${message}`, '_blank');
+            try {
+                payBtn.innerText = "Processing Order...";
+                payBtn.disabled = true;
+
+                const response = await fetch('/api/orders', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("🎉 Order Placed Successfully!");
+                    localStorage.removeItem('homeBiteCart'); // Order hone ke baad cart khali kar do
+                    window.location.href = "orderhistory.html"; // Order History page par bhejo
+                } else {
+                    alert("❌ Order Failed! Make sure your Live-Menu items have valid Database UUIDs. Error: " + result.message);
+                    payBtn.innerText = "📦 Place Order";
+                    payBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error placing order:", error);
+                alert("❌ Server Connection Error! Please try again.");
+                payBtn.innerText = "📦 Place Order";
+                payBtn.disabled = false;
+            }
         }
 
         window.onload = updateCartUI;
