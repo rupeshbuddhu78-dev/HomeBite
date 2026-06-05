@@ -94,7 +94,7 @@ app.post('/api/signup', async (req, res) => {
             .insert([{ 
                 id: userId, 
                 name: fullname, 
-                email: email,      
+                email: email, 
                 phone: phone, 
                 address: address,
                 profile_pic_url: profilePicUrl,
@@ -104,7 +104,6 @@ app.post('/api/signup', async (req, res) => {
         if (dbError) return res.status(500).json({ success: false, message: "Auth successful, but failed to save profile details: " + dbError.message });
 
         return res.status(201).json({ success: true, message: "Account Created Successfully!", profile_pic_url: profilePicUrl });
-
     } catch (err) {
         return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
     }
@@ -183,7 +182,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 4. UPDATE PROFILE API
+// 4. UPDATE PROFILE API (FOR CUSTOMERS/USERS)
 // ==========================================
 app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { userId, fullname, phone, address } = req.body;
@@ -211,7 +210,6 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
             message: "Profile updated successfully!",
             profile_pic_url: updateData.profile_pic_url
         });
-
     } catch (err) {
         console.error("Update Profile Error:", err);
         return res.status(500).json({ success: false, error: err.message });
@@ -282,7 +280,6 @@ app.post('/api/orders', async (req, res) => {
         }
 
         return res.status(201).json({ success: true, message: "Order Placed Successfully!", orderId: orderId });
-
     } catch (err) {
         console.error("Checkout Error:", err);
         return res.status(500).json({ success: false, error: err.message });
@@ -317,7 +314,7 @@ app.get('/api/orders/:userId', async (req, res) => {
 // 🔥 [NEW] UPDATE ORDER STATUS API (For Cooks)
 app.put('/api/orders/status/:orderId', async (req, res) => {
     const { orderId } = req.params;
-    const { status } = req.body; // 'Accepted', 'Preparing', 'Delivered', 'Cancelled'
+    const { status } = req.body; 
 
     try {
         const { error } = await supabase
@@ -372,7 +369,7 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
                 latitude: latitude ? parseFloat(latitude) : null, 
                 longitude: longitude ? parseFloat(longitude) : null, 
                 profile_pic_url: profilePicUrl,
-                is_open: true // Default open
+                is_open: true 
             }])
             .select()
             .single();
@@ -410,7 +407,56 @@ app.post('/api/cook/login', async (req, res) => {
 });
 
 // ==========================================
-// 10. KITCHEN ON/OFF STATUS SWITCH 
+// 🔥 10. [MISSING API ADDED] UPDATE CHEF PROFILE 
+// ==========================================
+app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, res) => {
+    const { cook_id, name, email, kitchen_name, phone, pan_card, address, latitude, longitude } = req.body;
+
+    try {
+        if (!cook_id) {
+            return res.status(400).json({ success: false, message: "Cook ID is required" });
+        }
+
+        let updateData = {};
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (kitchen_name) updateData.kitchen_name = kitchen_name;
+        if (phone) updateData.phone = phone;
+        if (pan_card) updateData.pan_card = pan_card;
+        if (address) updateData.address = address;
+        if (latitude) updateData.latitude = parseFloat(latitude);
+        if (longitude) updateData.longitude = parseFloat(longitude);
+
+        // Upload new profile picture if provided
+        if (req.file) {
+            const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_cooks');
+            updateData.profile_pic_url = cloudinaryResult.secure_url;
+        }
+
+        const { data, error } = await supabase
+            .from('cooks')
+            .update(updateData)
+            .eq('id', cook_id)
+            .select()
+            .single();
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Profile updated successfully!",
+            profile_pic_url: updateData.profile_pic_url,
+            cook: data
+        });
+
+    } catch (err) {
+        console.error("Update Cook Profile Error:", err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 11. KITCHEN ON/OFF STATUS SWITCH 
 // ==========================================
 app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -433,7 +479,7 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 11. FETCH COOK'S EXCLUSIVE MENU ITEMS 
+// 12. FETCH COOK'S EXCLUSIVE MENU ITEMS 
 // ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -480,7 +526,7 @@ app.get('/api/cook/orders/:cookId', async (req, res) => {
 // ========================================================================= 🗓️
 
 // ==========================================
-// 12. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT)
+// 13. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT)
 // ==========================================
 app.post('/api/cook/routine', async (req, res) => {
     const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
@@ -508,7 +554,7 @@ app.post('/api/cook/routine', async (req, res) => {
 });
 
 // ==========================================
-// 13. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK
+// 14. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK
 // ==========================================
 app.get('/api/cook/routine/:cookId', async (req, res) => {
     const { cookId } = req.params;
