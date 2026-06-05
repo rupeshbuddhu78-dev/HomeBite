@@ -9,11 +9,11 @@ const multer = require('multer');             // File upload handler
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware Setup
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname)); // static फ़ाइल्स (जैसे routine.html) को सर्व करने के लिए
 
 // ==========================================
 // CLOUDINARY CONFIGURATION 
@@ -24,11 +24,11 @@ cloudinary.config({
     api_secret: '5GPy1IaiebH5TPTH9jnn7uHElk8' 
 });
 
-// Multer Setup (Form Data aur Image Upload ke liye)
+// Multer Memory Storage Setup (फॉर डायरेक्ट इमेज बफ़र अपलोड)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Helper function for Cloudinary
+// Cloudinary हेल्पर फ़ंक्शन
 const uploadToCloudinary = (fileBuffer, folderName) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -54,6 +54,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// डेटाबेस कनेक्शन टेस्टिंग फ़ंक्शन
 async function testConnection() {
     const { data, error } = await supabase.from('users').select('id').limit(1);
     if (error) {
@@ -65,7 +66,7 @@ async function testConnection() {
 testConnection();
 
 // ==========================================
-// 1. SIGNUP API (With Base64 Profile Pic Upload)
+// 1. CUSTOMER SIGNUP API (With Base64 Profile Pic)
 // ==========================================
 app.post('/api/signup', async (req, res) => {
     const { fullname, phone, email, address, password, profileImage } = req.body;
@@ -110,7 +111,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // ==========================================
-// 2. FOOD ITEMS UPLOAD API (Live Order Items)
+// 2. FOOD ITEMS UPLOAD API (Live Order Menu Items)
 // ==========================================
 app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
     const { cook_id, name, price, type } = req.body;
@@ -130,13 +131,15 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 
         if (error) return res.status(400).json({ success: false, message: error.message });
 
-        return res.status(201).json({ success: true, message: "Food Item added successfully!", url: foodImageUrl });
+        return res.status(201).json({ success: true, message: "Food Item added successfully!", url: foodImageUrl, item: data });
     } catch (err) {
         return res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 🔥 [NEW] DELETE FOOD ITEM API
+// ==========================================
+// 3. DELETE FOOD ITEM API
+// ==========================================
 app.delete('/api/food-items/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -149,7 +152,7 @@ app.delete('/api/food-items/:id', async (req, res) => {
 });
 
 // ==========================================
-// 3. LOGIN API (FULL PROFILE DATA)
+// 4. CUSTOMER LOGIN API (Full Profile Data Fetch)
 // ==========================================
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
@@ -182,7 +185,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 4. UPDATE PROFILE API (FOR CUSTOMERS/USERS)
+// 5. UPDATE PROFILE API (FOR CUSTOMERS)
 // ==========================================
 app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { userId, fullname, phone, address } = req.body;
@@ -217,7 +220,7 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 });
 
 // ==========================================
-// 5. CHANGE PASSWORD API
+// 6. CHANGE PASSWORD API
 // ==========================================
 app.post('/api/change-password', async (req, res) => {
     const { userId, password } = req.body;
@@ -238,7 +241,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ==========================================
-// 6. PLACE NEW ORDER API (Live Orders)
+// 7. PLACE NEW ORDER API (Live Food Checkout)
 // ==========================================
 app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod } = req.body;
@@ -287,7 +290,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// 7. GET ORDER HISTORY API (For Users)
+// 8. GET ORDER HISTORY API (For Customers)
 // ==========================================
 app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -311,7 +314,9 @@ app.get('/api/orders/:userId', async (req, res) => {
     }
 });
 
-// 🔥 [NEW] UPDATE ORDER STATUS API (For Cooks)
+// ==========================================
+// 9. UPDATE ORDER STATUS API (For Cooks Dashboard)
+// ==========================================
 app.put('/api/orders/status/:orderId', async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body; 
@@ -330,11 +335,9 @@ app.put('/api/orders/status/:orderId', async (req, res) => {
     }
 });
 
-// ⚡ =========================================================================
-// HOUSEWIVES (COOKS) APIS 
-// ========================================================================= ⚡
-
-// 🔥 [NEW] GET ALL COOKS/KITCHENS API (For Customer Home Page)
+// ==========================================
+// 10. GET ALL COOKS/KITCHENS API (For Customer Home Page)
+// ==========================================
 app.get('/api/cooks', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -350,7 +353,7 @@ app.get('/api/cooks', async (req, res) => {
 });
 
 // ==========================================
-// 8. HOUSEWIFE (COOK) REGISTRATION
+// 11. HOUSEWIFE (COOK) REGISTRATION API
 // ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
@@ -383,7 +386,7 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
 });
 
 // ==========================================
-// 9. HOUSEWIFE (COOK) LOGIN 
+// 12. HOUSEWIFE (COOK) LOGIN API
 // ==========================================
 app.post('/api/cook/login', async (req, res) => {
     const { phone, password } = req.body;
@@ -407,7 +410,7 @@ app.post('/api/cook/login', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 10. [MISSING API ADDED] UPDATE CHEF PROFILE 
+// 13. UPDATE CHEF PROFILE API (For Cooks Settings)
 // ==========================================
 app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { cook_id, name, email, kitchen_name, phone, pan_card, address, latitude, longitude } = req.body;
@@ -427,7 +430,6 @@ app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, r
         if (latitude) updateData.latitude = parseFloat(latitude);
         if (longitude) updateData.longitude = parseFloat(longitude);
 
-        // Upload new profile picture if provided
         if (req.file) {
             const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_cooks');
             updateData.profile_pic_url = cloudinaryResult.secure_url;
@@ -456,7 +458,7 @@ app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, r
 });
 
 // ==========================================
-// 11. KITCHEN ON/OFF STATUS SWITCH 
+// 14. KITCHEN ON/OFF STATUS SWITCH (Toggle Open Status)
 // ==========================================
 app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -479,7 +481,7 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 12. FETCH COOK'S EXCLUSIVE MENU ITEMS 
+// 15. FETCH COOK'S EXCLUSIVE MENU ITEMS API
 // ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -498,7 +500,9 @@ app.get('/api/cook/menu/:cookId', async (req, res) => {
     }
 });
 
-// 🔥 [NEW] GET ORDERS RECEIVED BY COOK
+// ==========================================
+// 16. GET ORDERS RECEIVED BY SPECIFIC COOK API
+// ==========================================
 app.get('/api/cook/orders/:cookId', async (req, res) => {
     const { cookId } = req.params;
 
@@ -521,9 +525,8 @@ app.get('/api/cook/orders/:cookId', async (req, res) => {
     }
 });
 
-
 // ==========================================
-// 🍲 GET COOK PROFILE API (For Dashboard)
+// 17. GET COOK PROFILE DETAILS API (For Dashboard View)
 // ==========================================
 app.get('/api/cook/profile/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -542,12 +545,8 @@ app.get('/api/cook/profile/:cookId', async (req, res) => {
     }
 });
 
-// 🗓️ =========================================================================
-// WEEKLY ROUTINE APIs (Monthly Tiffin Plan) 
-// ========================================================================= 🗓️
-
 // ==========================================
-// 13. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT)
+// 18. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT - Monthly Tiffin Plan)
 // ==========================================
 app.post('/api/cook/routine', async (req, res) => {
     const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
@@ -575,11 +574,11 @@ app.post('/api/cook/routine', async (req, res) => {
 });
 
 // ==========================================
-// 14. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK
+// 19. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK API
 // ==========================================
 app.get('/api/cook/routine/:cookId', async (req, res) => {
     const { cookId } = req.params;
-    const { plan_type } = req.query; // ?plan_type=Veg
+    const { plan_type } = req.query; // Query Example: ?plan_type=Veg
 
     try {
         let query = supabase.from('weekly_routines').select('*').eq('cook_id', cookId);
@@ -598,12 +597,14 @@ app.get('/api/cook/routine/:cookId', async (req, res) => {
     }
 });
 
-// Wildcard Route
+// ==========================================
+// 20. WILDCARD ROUTINE (SPA Fallback - Serve Frontend Client)
+// ==========================================
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Server Start
+// Server Fire Up
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`🚀 Server is successfully running on port ${PORT}`);
 });
