@@ -87,7 +87,7 @@
             .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .timeline { flex-direction: column; gap: 20px; align-items: flex-start; padding-left: 10px;}
             .timeline::before { top: 0; left: 26px; width: 4px; height: 100%; }
-            .timeline-progress { top: 0; left: 26px; width: 4px; height: 0%; /* JS will handle height */ }
+            .timeline-progress { top: 0; left: 26px; width: 4px; height: 0%; }
             .step { width: 100%; display: flex; align-items: center; gap: 15px; text-align: left; }
             .step-icon { margin: 0; }
             .card-actions { flex-direction: column; }
@@ -128,12 +128,15 @@
     </div>
 
     <script>
+        // 🔴 Yaha apna Render API URL theek kar diya hai!
+        const API_URL = "https://homebite-gepq.onrender.com";
+
         // Global array to store fetched orders
         let fetchedOrders = [];
 
         // 1. Fetch Orders from Backend
         async function fetchOrders() {
-            const userStr = localStorage.getItem('user');
+            const userStr = localStorage.getItem('user') || localStorage.getItem('userData');
             if (!userStr) {
                 alert("Please login to view your orders.");
                 window.location.href = "login.html";
@@ -144,7 +147,8 @@
             const userId = user.id;
 
             try {
-                const response = await fetch(`http://localhost:5000/api/orders/${userId}`);
+                // 🔴 LOCALHOST KI JAGAH RENDER API URL USE KIYA HAI
+                const response = await fetch(`${API_URL}/api/orders/${userId}`);
                 const data = await response.json();
 
                 document.getElementById('loadingMessage').style.display = 'none';
@@ -176,7 +180,7 @@
             ordersToRender.forEach(order => {
                 // Determine Status Level (1 to 4)
                 let statusLevel = 1; 
-                const dbStatus = order.status.toLowerCase();
+                const dbStatus = order.status ? order.status.toLowerCase() : "pending";
                 
                 if (dbStatus.includes('prepar') || dbStatus.includes('accept')) statusLevel = 2;
                 if (dbStatus.includes('way') || dbStatus.includes('dispatch') || dbStatus.includes('out')) statusLevel = 3;
@@ -194,12 +198,16 @@
                 let itemsHTML = '';
                 let totalItemsCount = 0;
 
-                order.order_items.forEach(item => {
-                    const itemName = item.food_items ? item.food_items.name : "Unknown Item";
-                    const itemTotalPrice = item.price * item.quantity;
-                    totalItemsCount += item.quantity;
-                    itemsHTML += `<div class="item-row"><span>${item.quantity}x ${itemName}</span><span>₹${itemTotalPrice}</span></div>`;
-                });
+                if(order.order_items && order.order_items.length > 0) {
+                    order.order_items.forEach(item => {
+                        const itemName = item.food_items ? item.food_items.name : "Unknown Item";
+                        const itemTotalPrice = item.price * item.quantity;
+                        totalItemsCount += item.quantity;
+                        itemsHTML += `<div class="item-row"><span>${item.quantity}x ${itemName}</span><span>₹${itemTotalPrice}</span></div>`;
+                    });
+                } else {
+                    itemsHTML = `<div class="item-row"><span style="color:red">No items found</span></div>`;
+                }
 
                 // Format Date
                 const dateObj = new Date(order.created_at);
@@ -286,7 +294,7 @@
         }
 
         // Handle Responsive Timeline Progress on window resize
-        window.addEventListener('resize', () => filterOrders()); // Re-render based on current filter to adjust timeline heights
+        window.addEventListener('resize', () => filterOrders());
         
         // Fetch when page loads
         window.onload = fetchOrders;
