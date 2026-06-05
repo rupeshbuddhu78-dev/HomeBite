@@ -6,6 +6,8 @@
     <title>Your Cart & Checkout - HomeBite</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <style>
         /* === GLOBAL SETTINGS === */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -127,7 +129,7 @@
             <div class="payment-options">
                 <h4>Payment Method</h4>
                 <label class="pay-method">
-                    <input type="radio" name="payment" value="Online" checked> UPI / Card (Cashfree)
+                    <input type="radio" name="payment" value="Online" checked> UPI / Card (Razorpay)
                 </label>
                 <label class="pay-method">
                     <input type="radio" name="payment" value="COD"> Cash on Delivery (COD)
@@ -145,7 +147,6 @@
         let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
         const loggedInUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userData'));
         
-        // Variable to hold the final selected address string
         let selectedDeliveryAddress = ""; 
 
         // 1. FETCH & DISPLAY ADDRESSES
@@ -164,7 +165,6 @@
                         const landmarkInfo = addr.landmark ? ` (Near: ${addr.landmark})` : '';
                         const fullAddrString = `${addr.full_address}${landmarkInfo}, PIN: ${addr.pincode}`;
                         
-                        // Select the first address by default
                         let selectedClass = index === 0 ? 'selected' : '';
                         if (index === 0) selectedDeliveryAddress = fullAddrString;
 
@@ -187,14 +187,9 @@
 
         // 2. HIGHLIGHT SELECTED ADDRESS
         function selectAddress(element, addressString) {
-            // Remove 'selected' class from all cards
             const allCards = document.querySelectorAll('.address-card');
             allCards.forEach(card => card.classList.remove('selected'));
-            
-            // Add 'selected' to clicked card
             element.classList.add('selected');
-            
-            // Update global variable
             selectedDeliveryAddress = addressString;
         }
 
@@ -220,7 +215,7 @@
 
             checkoutBox.style.display = 'block';
             addressBox.style.display = 'block';
-            fetchSavedAddresses(); // Fetch addresses if cart is not empty
+            fetchSavedAddresses(); 
             
             let totalAmount = 0;
             const uniqueChefs = [...new Set(cart.map(item => item.chefId))];
@@ -264,7 +259,9 @@
             updateCartUI();
         }
 
-        // 4. PROCESS CHECKOUT (Submitting data to server)
+        // ==========================================
+        // 4. 🔥 PROCESS CHECKOUT WITH RAZORPAY
+        // ==========================================
         async function processCheckout() {
             if (!loggedInUser || !loggedInUser.id) {
                 alert("Please login first to place an order!");
@@ -279,31 +276,109 @@
 
             const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
             const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
 
-            // NEW MULTI-KITCHEN ORDER LOGIC: We send the whole cart. 
-            // Our backend (`/api/orders`) will split this into separate orders for each cook.
+            // Prepare Data for Database
             const orderPayload = {
                 userId: loggedInUser.id,
-                items: cart, // the full cart array
+                cookId: cart[0].chefId, // Assuming single kitchen for now as per schema
+                items: cart, 
                 grandTotal: window.currentGrandTotal,
                 paymentMethod: paymentMethod,
-                deliveryAddress: selectedDeliveryAddress // sending the properly formatted string
+                deliveryAddress: selectedDeliveryAddress 
             };
 
-            if(paymentMethod === 'Online') {
-                alert("Cashfree Gateway Integration will open here.");
-                // Passing to fake success for now until cashfree is connected
-                placeOrderAPI(orderPayload, payBtn);
+            // IF ONLINE PAYMENT (RAZORPAY)
+            if (paymentMethod === 'Online') {
+                payBtn.innerText = "Opening Payment Gateway...";
+                
+                try {
+                    // Step 1: Create Order on Backend
+                    const res = await fetch(`${API_URL}/api/create-razorpay-order`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ amount: window.currentGrandTotal })
+                    });
+                    const data = await res.json();
+                    
+                    if (!data.success) throw new Error("Failed to initialize payment.");
+
+                    // Step 2: Configure Razorpay Modal Options
+                    const options = {
+                        key: "rzp_test_Sy6ktKhuu6mh4x", // Your Razorpay Test Key ID
+                        amount: data.order.amount,
+                        currency: data.order.currency,
+                        name: "HomeBite",
+                        description: "Delicious Home Cooked Food",
+                        order_id: data.order.id, 
+                        handler: async function (response) {
+                            // Step 3: Payment Success - Verify & Save to DB
+                            payBtn.innerText = "Verifying Payment...";
+                            
+                            const verifyRes = await fetch(`${API_URL}/api/verify-payment`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderDetails: orderPayload
+                                })
+                            });
+                            
+                            const verifyData = await verifyRes.json();
+                            
+                            if (verifyData.success) {
+                                alert("🎉 Payment Successful! Order Placed.");
+                                localStorage.removeItem('homeBiteCart');
+                                window.location.href = "orderhistory.html"; 
+                            } else {
+                                alert("❌ Payment Verification Failed!");
+                                payBtn.innerText = "📦 Place Order";
+                                payBtn.disabled = false;
+                            }
+                        },
+                        prefill: {
+                            name: loggedInUser.name || "HomeBite Customer",
+                            email: loggedInUser.email || "customer@homebite.com",
+                            contact: loggedInUser.phone || "9999999999"
+                        },
+                        theme: { color: "#ff6b00" },
+                        modal: {
+                            ondismiss: function() {
+                                payBtn.innerText = "📦 Place Order";
+                                payBtn.disabled = false;
+                            }
+                        }
+                    };
+
+                    // Step 4: Open the Razorpay Popup
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function (response){
+                        alert("❌ Payment Failed. Please try again. Reason: " + response.error.description);
+                        payBtn.innerText = "📦 Place Order";
+                        payBtn.disabled = false;
+                    });
+                    rzp.open();
+
+                } catch (err) {
+                    console.error(err);
+                    alert("❌ Could not connect to Payment Gateway.");
+                    payBtn.innerText = "📦 Place Order";
+                    payBtn.disabled = false;
+                }
+
             } else {
+                // IF CASH ON DELIVERY
                 placeOrderAPI(orderPayload, payBtn);
             }
         }
 
+        // API Call for COD
         async function placeOrderAPI(orderPayload, payBtn) {
             try {
                 payBtn.innerText = "Processing Order...";
-                payBtn.disabled = true;
-
+                
                 const response = await fetch(`${API_URL}/api/orders`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -313,7 +388,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert("🎉 Order Placed Successfully! It has been sent to the Kitchen(s).");
+                    alert("🎉 Order Placed Successfully! It has been sent to the Kitchen.");
                     localStorage.removeItem('homeBiteCart');
                     window.location.href = "orderhistory.html"; 
                 } else {
