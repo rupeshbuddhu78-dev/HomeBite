@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Leave - HomeBite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === GLOBAL SETTINGS === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #fdfbf7; color: #333; overflow-x: hidden; }
+        :root { --primary: #ff6b00; --secondary: #ff3c00; --dark: #121212; --border: #eaeaea; }
+
+        /* === PREMIUM NAVBAR === */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px); position: fixed; width: 100%; top: 0; z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .logo { font-size: 28px; font-weight: 800; color: var(--dark); letter-spacing: -1px; text-decoration: none; }
+        .logo span { background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .nav-links { display: flex; gap: 25px; list-style: none; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 0.95rem; transition: 0.3s; padding: 5px 0; }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* === LEAVE CONTAINER === */
+        .leave-container { max-width: 1000px; margin: 120px auto 50px; padding: 0 5%; }
+        
+        .header-title { font-size: 2rem; font-weight: 800; color: var(--dark); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .back-btn { text-decoration: none; color: var(--primary); font-size: 1rem; font-weight: 600; margin-bottom: 20px; display: inline-block; }
+        
+        /* === DESKTOP GRID LAYOUT === */
+        .content-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; }
+        
+        .card { background: white; padding: 35px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
+        .section-title { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 25px; border-bottom: 2px solid #f9f9f9; padding-bottom: 12px; }
+
+        /* === FORM STYLES === */
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #444; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px;
+            font-size: 0.95rem; outline: none; transition: 0.3s; font-family: inherit; background: #fdfaf7;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #fff5eb; background: white; }
+        .submit-btn { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .submit-btn:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 8px 15px rgba(255, 107, 0, 0.2); }
+
+        /* === HISTORY STYLES === */
+        .history-list { display: flex; flex-direction: column; gap: 15px; }
+        .history-card { border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; background: white; }
+        .history-card:hover { border-color: #ffd1b3; box-shadow: 0 5px 15px rgba(255, 107, 0, 0.05); }
+        
+        .history-info h4 { color: var(--dark); font-size: 1.05rem; margin-bottom: 5px; }
+        .history-info p { color: #666; font-size: 0.85rem; }
+        .dates { font-weight: 700; color: var(--primary); }
+        
+        .status-badge { padding: 6px 14px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; text-align: center; }
+        .status-pending { background: #fff5eb; color: #f5a623; border: 1px solid rgba(245, 166, 35, 0.2); }
+        .status-approved { background: #e8f9f0; color: #00d26a; border: 1px solid rgba(0, 210, 106, 0.2); }
+        .status-rejected { background: #fff1f0; color: #d93025; border: 1px solid rgba(217, 48, 37, 0.2); }
+
+        .empty-state { text-align: center; padding: 30px 10px; color: #999; font-size: 0.95rem; }
+
+        @media (max-width: 900px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">Home<span>Bite</span></a>
+        <ul class="nav-links">
+            <li><a href="profile.html">Profile</a></li>
+        </ul>
+    </nav>
+
+    <div class="leave-container">
+        <a href="profile.html" class="back-btn">← Back to Profile</a>
+        <h1 class="header-title">📅 Meal Leave Management</h1>
+
+        <div class="content-grid">
+            
+            <!-- APPLY LEAVE FORM -->
+            <div class="card">
+                <h2 class="section-title">Apply for Leave</h2>
+                <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Pause your meal subscription for the days you are away. Meals and wallet balance will be adjusted accordingly.</p>
+                
+                <form id="leaveForm" onsubmit="handleLeaveSubmit(event)">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="endDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Reason (Optional)</label>
+                        <textarea id="reason" rows="2" placeholder="Going home, traveling, etc."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitBtn">Submit Request</button>
+                </form>
+            </div>
+
+            <!-- LEAVE HISTORY -->
+            <div class="card">
+                <h2 class="section-title">My Leave History</h2>
+                <div class="history-list" id="leaveHistoryContainer">
+                    <!-- History Cards will be injected here via JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date to today for the input fields
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').setAttribute('min', today);
+        document.getElementById('endDate').setAttribute('min', today);
+
+        // Ensure End Date is not before Start Date
+        document.getElementById('startDate').addEventListener('change', function() {
+            document.getElementById('endDate').setAttribute('min', this.value);
+        });
+
+        // Initialize and Load Data
+        window.onload = function() {
+            loadLeaveHistory();
+        };
+
+        function handleLeaveSubmit(e) {
+            e.preventDefault();
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const reason = document.getElementById('reason').value || "Not specified";
+            
+            if (!startDate || !endDate) {
+                alert("Please select both dates.");
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "Submitting...";
+            btn.disabled = true;
+
+            // Simulated API Request Time
+            setTimeout(() => {
+                const newLeave = {
+                    id: Date.now(),
+                    startDate: startDate,
+                    endDate: endDate,
+                    reason: reason,
+                    status: 'Pending', // default status
+                    appliedOn: new Date().toLocaleDateString()
+                };
+
+                // Fetch existing leaves from LocalStorage
+                let leaves = JSON.parse(localStorage.getItem('homeBiteLeaves')) || [];
+                leaves.unshift(newLeave); // Add new request to the top
+
+                // Save back to LocalStorage
+                localStorage.setItem('homeBiteLeaves', JSON.stringify(leaves));
+
+                // Reset Form
+                document.getElementById('leaveForm').reset();
+                btn.innerText = "Submit Request";
+                btn.disabled = false;
+                
+                alert("Leave request submitted successfully!");
+                loadLeaveHistory(); // Refresh the history list
+
+                // Optional: You would normally send an API request to your backend here
+                // fetch('https://homebite-gepq.onrender.com/api/leave', { ... })
+            }, 800);
+        }
+
+        function loadLeaveHistory() {
+            const container = document.getElementById('leaveHistoryContainer');
+            let leaves = JSON.parse(localStorage.getItem('homeBiteLeaves')) || [];
+
+            if (leaves.length === 0) {
+                container.innerHTML = `<div class="empty-state">You haven't applied for any leaves yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = ""; // Clear current list
+
+            leaves.forEach(leave => {
+                // Determine Badge Class
+                let badgeClass = 'status-pending';
+                if (leave.status === 'Approved') badgeClass = 'status-approved';
+                if (leave.status === 'Rejected') badgeClass = 'status-rejected';
+
+                const cardHTML = `
+                    <div class="history-card">
+                        <div class="history-info">
+                            <h4><span class="dates">${formatDate(leave.startDate)}</span> to <span class="dates">${formatDate(leave.endDate)}</span></h4>
+                            <p>Reason: ${leave.reason}</p>
+                            <p style="font-size: 0.75rem; color: #999; margin-top: 4px;">Applied on: ${leave.appliedOn}</p>
+                        </div>
+                        <div class="status-badge ${badgeClass}">
+                            ${leave.status}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // Helper function to format date (e.g., "2023-10-15" to "15 Oct 2023")
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-IN', options);
+        }
+    </script>
+</body>
+</html>
