@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increased limit for Base64 if needed
+app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(__dirname));
 
@@ -111,7 +111,7 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // ==========================================
-// 2. FOOD ITEMS UPLOAD API 
+// 2. FOOD ITEMS UPLOAD API (Live Order Items)
 // ==========================================
 app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
     const { cook_id, name, price, type } = req.body;
@@ -228,7 +228,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ==========================================
-// 6. PLACE NEW ORDER API (Supabase)
+// 6. PLACE NEW ORDER API (Live Orders)
 // ==========================================
 app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod } = req.body;
@@ -278,7 +278,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// 7. GET ORDER HISTORY API (Supabase)
+// 7. GET ORDER HISTORY API
 // ==========================================
 app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -301,18 +301,20 @@ app.get('/api/orders/:userId', async (req, res) => {
     }
 });
 
--- ⚡ 👇 NAZAR YAHAN RAKHO: APP & HOUSEWIVES (COOKS) KE LIYE NAYI APIS 👇 ⚡ --
 
-// =========================================================================
-// 8. APP NEW FIX: HOUSEWIFE (COOK) REGISTRATION API (With Multer Image)
-// =========================================================================
+// ⚡ =========================================================================
+// HOUSEWIVES (COOKS) APIS (Registration, Login, Menu, ROUTINE)
+// ========================================================================= ⚡
+
+// ==========================================
+// 8. HOUSEWIFE (COOK) REGISTRATION
+// ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
 
     try {
         let profilePicUrl = null;
         if (req.file) {
-            // Housewives images uploaded to 'homebite_cooks'
             const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_cooks');
             profilePicUrl = cloudinaryResult.secure_url;
         }
@@ -320,13 +322,7 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
         const { data, error } = await supabase
             .from('cooks')
             .insert([{ 
-                name, 
-                email, 
-                phone, 
-                password, 
-                kitchen_name, 
-                address, 
-                pan_card,
+                name, email, phone, password, kitchen_name, address, pan_card,
                 latitude: latitude ? parseFloat(latitude) : null, 
                 longitude: longitude ? parseFloat(longitude) : null, 
                 profile_pic_url: profilePicUrl 
@@ -342,9 +338,9 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
     }
 });
 
-// =========================================================================
-// 9. APP NEW FIX: HOUSEWIFE (COOK) LOGIN API (By Phone & Password)
-// =========================================================================
+// ==========================================
+// 9. HOUSEWIFE (COOK) LOGIN 
+// ==========================================
 app.post('/api/cook/login', async (req, res) => {
     const { phone, password } = req.body;
 
@@ -366,12 +362,12 @@ app.post('/api/cook/login', async (req, res) => {
     }
 });
 
-// =========================================================================
-// 10. APP NEW FIX: KITCHEN ON/OFF STATUS SWITCH (Toggle Button for App)
-// =========================================================================
+// ==========================================
+// 10. KITCHEN ON/OFF STATUS SWITCH 
+// ==========================================
 app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     const { cookId } = req.params;
-    const { is_open } = req.body; // Expecting true or false
+    const { is_open } = req.body; 
 
     try {
         const { data, error } = await supabase
@@ -389,9 +385,9 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     }
 });
 
-// =========================================================================
-// 11. APP NEW FIX: FETCH COOK'S EXCLUSIVE MENU ITEMS
-// =========================================================================
+// ==========================================
+// 11. FETCH COOK'S EXCLUSIVE MENU ITEMS (Live Orders)
+// ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
 
@@ -404,6 +400,65 @@ app.get('/api/cook/menu/:cookId', async (req, res) => {
         if (error) return res.status(400).json({ success: false, message: error.message });
 
         return res.status(200).json({ success: true, items: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+
+// 🗓️ =========================================================================
+// 🔥 NEW FIX: WEEKLY ROUTINE APIs (Monthly Tiffin Plan) 🔥
+// ========================================================================= 🗓️
+
+// ==========================================
+// 12. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT)
+// ==========================================
+app.post('/api/cook/routine', async (req, res) => {
+    const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
+
+    try {
+        // Upsert logic: Update karega agar us din ka us plan ka routine pehle se hai, warna naya banayega
+        const { data, error } = await supabase
+            .from('weekly_routines')
+            .upsert([{
+                cook_id,
+                plan_type, // 'Veg' ya 'Non-Veg'
+                monthly_price: parseInt(monthly_price),
+                day_of_week, // 'Monday', 'Tuesday', etc.
+                morning_meal,
+                afternoon_meal,
+                night_meal
+            }], { onConflict: 'cook_id, plan_type, day_of_week' }) 
+            .select();
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: "Routine saved successfully!", routine: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 13. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK
+// ==========================================
+app.get('/api/cook/routine/:cookId', async (req, res) => {
+    const { cookId } = req.params;
+    const { plan_type } = req.query; // Frontend can pass ?plan_type=Veg to filter
+
+    try {
+        let query = supabase.from('weekly_routines').select('*').eq('cook_id', cookId);
+        
+        // Agar Veg ya Non-Veg filter pass kiya hai, toh filter lagao
+        if (plan_type) {
+            query = query.eq('plan_type', plan_type);
+        }
+
+        const { data, error } = await query;
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, routines: data });
     } catch (err) {
         return res.status(500).json({ success: false, error: err.message });
     }
