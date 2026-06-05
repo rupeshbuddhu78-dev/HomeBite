@@ -75,7 +75,6 @@
         
         .food-img { width: 100%; height: 200px; position: relative; flex-shrink: 0; }
         .food-img img { width: 100%; height: 100%; object-fit: cover; display: block;}
-        .category-tag { position: absolute; top: 12px; left: 12px; background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: var(--dark); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .food-details { padding: 20px; flex: 1; display: flex; flex-direction: column; }
         .food-title-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
@@ -93,6 +92,7 @@
         .add-btn:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2); }
 
         .no-results { text-align: center; grid-column: 1 / -1; padding: 50px; color: #888; font-size: 1.1rem; }
+        .loader { text-align: center; grid-column: 1 / -1; padding: 50px; font-size: 1.2rem; color: var(--primary); font-weight: bold; }
 
         /* === PREMIUM FOOTER === */
         .footer { background: var(--dark); color: white; padding: 80px 5% 30px; border-top: 5px solid var(--primary); }
@@ -159,22 +159,15 @@
             <div class="filter-divider"></div>
 
             <button class="f-pill active" data-type="all" onclick="setFilter('type', 'all')">All Diet</button>
-            <button class="f-pill" data-type="veg" onclick="setFilter('type', 'veg')"><span class="veg-icon"></span> Veg</button>
-            <button class="f-pill" data-type="nonveg" onclick="setFilter('type', 'nonveg')"><span class="veg-icon nonveg-icon"></span> Non-Veg</button>
-            
-            <div class="filter-divider"></div>
-
-            <button class="f-pill active" data-cat="all" onclick="setFilter('category', 'all')">All Categories</button>
-            <button class="f-pill" data-cat="thali" onclick="setFilter('category', 'thali')">🍱 Thalis</button>
-            <button class="f-pill" data-cat="snacks" onclick="setFilter('category', 'snacks')">🍟 Snacks</button>
-            <button class="f-pill" data-cat="healthy" onclick="setFilter('category', 'healthy')">🥗 Healthy</button>
-            <button class="f-pill" data-cat="biryani" onclick="setFilter('category', 'biryani')">🍛 Biryani</button>
+            <button class="f-pill" data-type="Veg" onclick="setFilter('type', 'Veg')"><span class="veg-icon"></span> Veg</button>
+            <button class="f-pill" data-type="Non-Veg" onclick="setFilter('type', 'Non-Veg')"><span class="veg-icon nonveg-icon"></span> Non-Veg</button>
             
         </div>
     </div>
 
     <div class="food-grid" id="foodGrid">
-        </div>
+        <div class="loader">Fetching delicious dishes from local kitchens...</div>
+    </div>
 
     <footer class="footer">
         <div class="footer-grid">
@@ -209,21 +202,32 @@
     </footer>
 
     <script>
-        // UNIFIED LIVE FOOD DATABASE
-        const allLiveFood = [
-            { id: 101, chefId: 1, chefName: "Aarti Sharma", name: "Special Rajma Chawal", desc: "Punjabi style rajma with jeera rice & onion salad.", price: 80, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80" },
-            { id: 102, chefId: 1, chefName: "Aarti Sharma", name: "Aloo Paratha (2 pcs)", desc: "Stuffed aloo paratha served with fresh curd.", price: 60, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=400&q=80" },
-            { id: 103, chefId: 2, chefName: "Sunita Verma", name: "Healthy Diet Thali", desc: "Brown rice, mixed dal, boiled green sabzi & salad.", price: 90, type: "veg", category: "healthy", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80" },
-            { id: 104, chefId: 2, chefName: "Sunita Verma", name: "Sprouts Protein Salad", desc: "Protein rich moong sprouts with paneer cubes.", price: 50, type: "veg", category: "healthy", img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80" },
-            { id: 105, chefId: 3, chefName: "Priya Singh", name: "Chicken Dum Biryani", desc: "Aromatic chicken biryani with fresh mint raita.", price: 100, type: "nonveg", category: "biryani", img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=400&q=80" },
-            { id: 106, chefId: 3, chefName: "Priya Singh", name: "Egg Curry & Rice", desc: "2 eggs in spicy homestyle gravy with rice.", price: 80, type: "nonveg", category: "thali", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=400&q=80" },
-            { id: 107, chefId: 4, chefName: "Meena Aunty", name: "Authentic Litti Chokha", desc: "4 Littis dipped in pure ghee with baingan chokha.", price: 70, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=400&q=80" },
-            { id: 108, chefId: 5, chefName: "Anjali Gupta", name: "Chole Bhature (2 pcs)", desc: "Delhi style spicy chole with 2 fluffy bhaturas.", price: 80, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=400&q=80" },
-            { id: 109, chefId: 6, chefName: "Kavita Yadav", name: "Home-style Chicken Curry", desc: "Tender chicken cooked in basic home spices with 4 roti.", price: 95, type: "nonveg", category: "thali", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80" },
-            { id: 110, chefId: 7, chefName: "Rekha Jha", name: "Mithila Special Veg Thali", desc: "Rice, Dal, Tarua (fritters), Mix Sabzi, Papar.", price: 90, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80" },
-            { id: 111, chefId: 8, chefName: "Neelam Pandey", name: "Dal Makhani & Jeera Rice", desc: "Creamy overnight cooked dal makhani with rice.", price: 85, type: "veg", category: "thali", img: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400&q=80" },
-            { id: 112, chefId: 9, chefName: "Pooja Mishra", name: "Masala Dosa", desc: "Crispy dosa served with sambar and coconut chutney.", price: 70, type: "veg", category: "snacks", img: "https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?auto=format&fit=crop&w=400&q=80" }
-        ];
+        // 🔴 CHANGE THIS TO YOUR ACTUAL RENDER BACKEND URL 🔴
+        const API_URL = "https://backend-1-qf14.onrender.com"; 
+
+        let allLiveFood = []; // API se aane wala data yahan save hoga
+
+        // --- FETCH DATA FROM DATABASE --- //
+        async function fetchLiveFood() {
+            try {
+                // humne yahan /api/food-items call kiya (aapke app me ye addMenuItem k liye use hota h, backend me hum isko GET kar rahe hain)
+                // Note: Agar aapke backend me saare food items lane ki API /api/food-items nahi hai, 
+                // toh aap mujhe bata dena ki saare khane ki list backend se kis API se aati hai. 
+                // Abhi ke liye mai assume kar raha hu ki GET /api/food-items saara data dega.
+                const response = await fetch(`${API_URL}/api/food-items`); 
+                const data = await response.json();
+
+                if (data.success) {
+                    allLiveFood = data.items; // API response ke hisaab se (items array)
+                    renderGrid(allLiveFood);
+                } else {
+                    document.getElementById('foodGrid').innerHTML = `<div class="no-results">Failed to load food items.</div>`;
+                }
+            } catch (error) {
+                console.error("Error fetching food:", error);
+                document.getElementById('foodGrid').innerHTML = `<div class="no-results">⚠️ Error connecting to server. Please try again later.</div>`;
+            }
+        }
 
         // --- CART LOGIC WITH LOCALSTORAGE --- //
         let cartArray = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
@@ -239,19 +243,22 @@
         }
 
         function addToCart(itemId, btnElement) {
-            const foodItem = allLiveFood.find(item => item.id === itemId);
+            // Find item from fetched data
+            const foodItem = allLiveFood.find(item => item.id == itemId);
             if(foodItem) {
-                const existingItem = cartArray.find(item => item.id === itemId);
+                const existingItem = cartArray.find(item => item.id == itemId);
                 if(existingItem) {
                     existingItem.quantity += 1;
                 } else {
+                    // Yahan hum chef_id bhi cart me daal rahe hain taaki order karte waqt kaam aaye
                     cartArray.push({
                         id: foodItem.id,
                         name: foodItem.name,
-                        chefName: foodItem.chefName,
+                        chefName: foodItem.cook_name || "HomeBite Chef",
+                        chefId: foodItem.cook_id,
                         basePrice: foodItem.price,
                         quantity: 1,
-                        img: foodItem.img
+                        img: foodItem.image_url || 'https://via.placeholder.com/400x200?text=Food'
                     });
                 }
                 
@@ -259,7 +266,6 @@
                 updateCartCounter();
 
                 // Button visual feedback
-                const originalText = btnElement.innerText;
                 btnElement.innerText = "ADDED ✓";
                 btnElement.style.background = "var(--primary)";
                 btnElement.style.color = "white";
@@ -274,17 +280,12 @@
 
         // --- FILTERING LOGIC --- //
         let currentType = 'all';
-        let currentCategory = 'all';
 
         function setFilter(filterGroup, value) {
             if(filterGroup === 'type') {
                 currentType = value;
                 document.querySelectorAll('[data-type]').forEach(btn => btn.classList.remove('active'));
                 document.querySelector(`[data-type="${value}"]`).classList.add('active');
-            } else if (filterGroup === 'category') {
-                currentCategory = value;
-                document.querySelectorAll('[data-cat]').forEach(btn => btn.classList.remove('active'));
-                document.querySelector(`[data-cat="${value}"]`).classList.add('active');
             }
             applyFilters();
         }
@@ -292,8 +293,7 @@
         function applyFilters() {
             let filteredData = allLiveFood.filter(item => {
                 const matchType = (currentType === 'all') || (item.type === currentType);
-                const matchCategory = (currentCategory === 'all') || (item.category === currentCategory);
-                return matchType && matchCategory;
+                return matchType;
             });
 
             const sortValue = document.getElementById('priceSort').value;
@@ -311,27 +311,32 @@
             grid.innerHTML = '';
 
             if(data.length === 0) {
-                grid.innerHTML = `<div class="no-results">😔 Oops! No dishes found for this filter combination.</div>`;
+                grid.innerHTML = `<div class="no-results">😔 Oops! No dishes found.</div>`;
                 return;
             }
 
             data.forEach(item => {
-                const isVeg = item.type === 'veg';
+                // API field names ke hisaab se adjustments (aapke database columns ke naam)
+                const isVeg = item.type === 'Veg' || item.type === 'veg';
                 const iconClass = isVeg ? 'veg-icon' : 'veg-icon nonveg-icon';
+                const imgUrl = item.image_url ? item.image_url : 'https://via.placeholder.com/400x200?text=Food';
+                const cookName = item.cook_name ? item.cook_name : 'Home Chef';
                 
+                // Description field agar db me nahi hai toh blank chhodenge
+                const desc = item.description || "";
+
                 const card = `
                     <div class="food-card">
                         <div class="food-img">
-                            <span class="category-tag">${item.category.toUpperCase()}</span>
-                            <img src="${item.img}" alt="${item.name}">
+                            <img src="${imgUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/400x200?text=Food'">
                         </div>
                         <div class="food-details">
                             <div class="food-title-row">
                                 <span class="${iconClass}"></span>
                                 <h3 class="food-title">${item.name}</h3>
                             </div>
-                            <a href="routine.html?id=${item.chefId}" class="chef-link">👩‍🍳 By ${item.chefName}</a>
-                            <p class="food-desc">${item.desc}</p>
+                            <a href="routine.html?id=${item.cook_id}" class="chef-link">👩‍🍳 By ${cookName}</a>
+                            <p class="food-desc">${desc}</p>
                             
                             <div class="food-bottom">
                                 <div class="food-price">₹${item.price}</div>
@@ -346,29 +351,26 @@
 
         // --- ONLOAD INITIALIZATION --- //
         window.onload = () => {
-            renderGrid(allLiveFood);
+            fetchLiveFood(); // Fetch database se start
             updateCartCounter(); 
         };
 
         // ==========================================
-        // FIX: MOBILE NAVBAR CLOSE LOGIC
+        // MOBILE NAVBAR CLOSE LOGIC
         // ==========================================
         const navLinks = document.getElementById('navLinks');
         const menuToggle = document.getElementById('menuToggle');
 
-        // 1. Open/Close menu when clicking the hamburger icon
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
         });
 
-        // 2. Close menu when clicking ANY link inside the navbar
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
             });
         });
 
-        // 3. Close menu when clicking ANYWHERE outside the navbar
         document.addEventListener('click', (event) => {
             if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
                 navLinks.classList.remove('active');
