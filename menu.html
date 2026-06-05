@@ -20,7 +20,7 @@
             --border: #eaeaea;
         }
 
-        /* === PREMIUM NAVBAR === */
+        /* === PREMIUM NAVBAR (SYNCED WITH INDEX) === */
         .navbar {
             display: flex; justify-content: space-between; align-items: center;
             padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
@@ -61,7 +61,7 @@
             border: 1px solid #eaeaea; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
             cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
             animation: fadeInUp 0.6s ease-out forwards;
-            opacity: 0;
+            opacity: 0; /* Starts hidden for animation */
         }
         
         .chef-card:hover { 
@@ -75,7 +75,8 @@
         
         .chef-info-text { flex: 1; }
         .chef-info-text h3 { font-size: 1.4rem; color: var(--dark); line-height: 1.2; margin-bottom: 6px; font-weight: 700; }
-        .wa-group { color: var(--primary); font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 4px; }
+        .wa-link { color: var(--whatsapp); font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 4px; text-decoration: none; }
+        .wa-link:hover { text-decoration: underline; }
         .students-count { font-size: 0.85rem; color: #777; display: flex; align-items: center; gap: 5px; margin-top: 2px;}
         .status-badge { display: inline-block; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; border-radius: 30px; margin-top: 5px;}
         .status-open { background: #e6fcf5; color: #0ca678; }
@@ -198,10 +199,20 @@
                 const response = await fetch(`${BASE_URL}/cooks`);
                 const result = await response.json();
 
-                if (result.success && result.kitchens && result.kitchens.length > 0) {
-                    renderCards(result.kitchens);
+                if (result.success) {
+                    if (result.kitchens && result.kitchens.length > 0) {
+                        renderCards(result.kitchens);
+                    } else {
+                        grid.innerHTML = `
+                            <div class="error-msg">
+                                ⚠️ No Active Chefs found in Database!<br>
+                                <span style="font-size: 0.9rem; color: #888; display:block; margin-top:10px;">
+                                    Data hai par show nahi ho raha? Supabase mein cooks table ki RLS Policy check karein ya apne database me naya data add karein.
+                                </span>
+                            </div>`;
+                    }
                 } else {
-                    grid.innerHTML = `<div class="error-msg">⚠️ No Active Chefs found in Database!</div>`;
+                    grid.innerHTML = `<div class="error-msg">❌ Database Error: ${result.message}</div>`;
                 }
             } catch (error) {
                 console.error("API Fetch Error:", error);
@@ -227,8 +238,10 @@
                 const chefImg = chef.profile_pic_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80";
                 const kitchenName = chef.kitchen_name || "Homestyle Kitchen";
                 const chefAddress = chef.address || "Patna, Bihar";
-                const ratingValue = chef.rating ? `⭐ ${chef.rating}` : "⭐ 4.5";
-                
+                const chefRating = chef.rating ? parseFloat(chef.rating) : 5.0;
+                const starCount = Math.min(5, Math.max(1, Math.round(chefRating)));
+                const starsHTML = '⭐'.repeat(starCount);
+
                 // Open / Closed Status
                 const statusHTML = chef.is_open 
                     ? `<span class="status-badge status-open">🟢 Open Now</span>` 
@@ -239,10 +252,16 @@
                         <div class="chef-profile">
                             <img src="${chefImg}" alt="${chef.name}">
                             <div class="chef-info-text">
-                                <h3>${chef.name}</h3>
+                                <h3>${chef.name || 'Verified Chef'}</h3>
                                 <div class="wa-group">🍳 ${kitchenName}</div>
+                                <a href="https://wa.me/91${chef.phone}" target="_blank" class="wa-link" onclick="event.stopPropagation();">
+                                    💬 Chat on WhatsApp
+                                </a>
                                 <div class="students-count">📍 ${chefAddress}</div>
-                                <div class="students-count">${ratingValue}</div>
+                                <div class="rating-container" style="display: flex; gap: 4px; align-items: center; margin-top: 4px;">
+                                    <span style="font-size: 0.9rem;">${starsHTML}</span>
+                                    <span style="font-size: 0.85rem; color: #666; font-weight: 600;">(${chefRating.toFixed(1)}/5)</span>
+                                </div>
                                 ${statusHTML}
                             </div>
                         </div>
