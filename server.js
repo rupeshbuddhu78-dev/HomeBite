@@ -249,15 +249,15 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 });
 
 // ==========================================
-// 🔥 ADDRESS MANAGEMENT APIs (user_addresses टेबल के साथ) 🔥
+// 🔥 ADDRESS MANAGEMENT APIs
 // ==========================================
 
-// 1. GET Addresses (यूज़र के सारे एड्रेस मंगाने के लिए)
+// 1. GET Addresses (यूज़र के सारे एड्रेस मंगाने के लिए)
 app.get('/api/addresses/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
         const { data, error } = await supabase
-            .from('user_addresses') // FIXED: addresses se user_addresses kar diya
+            .from('user_addresses') 
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
@@ -275,7 +275,7 @@ app.post('/api/addresses', async (req, res) => {
     const { userId, full_address, landmark, pincode } = req.body;
     try {
         const { data, error } = await supabase
-            .from('user_addresses') // FIXED
+            .from('user_addresses') 
             .insert([{ user_id: userId, full_address, landmark, pincode }]);
 
         if (error) return res.status(400).json({ success: false, message: error.message });
@@ -292,7 +292,7 @@ app.put('/api/addresses/:id', async (req, res) => {
     const { full_address, landmark, pincode } = req.body;
     try {
         const { error } = await supabase
-            .from('user_addresses') // FIXED
+            .from('user_addresses') 
             .update({ full_address, landmark, pincode })
             .eq('id', id);
 
@@ -309,7 +309,7 @@ app.delete('/api/addresses/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const { error } = await supabase
-            .from('user_addresses') // FIXED
+            .from('user_addresses') 
             .delete()
             .eq('id', id);
 
@@ -390,7 +390,7 @@ app.get('/api/leave/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 11. PLACE NEW ORDER API
+// 🔥 11. PLACE NEW ORDER API (FIXED PRICE MAPPING)
 // ==========================================
 app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod, deliveryAddress } = req.body;
@@ -413,11 +413,12 @@ app.post('/api/orders', async (req, res) => {
 
         const orderId = orderData.id;
 
+        // FIXED MAPPING HERE
         const orderItemsArray = items.map(item => ({
             order_id: orderId,
-            food_id: item.foodId, 
+            food_id: item.id,            // FIXED: Used item.id instead of item.foodId
             quantity: item.quantity,
-            price: item.price
+            price: item.basePrice        // FIXED: Used item.basePrice instead of item.price
         }));
 
         const { error: itemsError } = await supabase.from('order_items').insert(orderItemsArray);
@@ -494,12 +495,9 @@ app.get('/api/cooks', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 15. HOUSEWIFE (COOK) REGISTRATION API (FIXED) 🔥
+// 15. HOUSEWIFE (COOK) REGISTRATION API 
 // ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
-    // Check incoming data
-    console.log("Cook Register Payload:", req.body);
-    
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
 
     try {
@@ -517,8 +515,8 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
                 phone, 
                 password, 
                 kitchen_name, 
-                address, // Fixed: Added address explicitly here
-                pan_card, // Fixed: Added pan_card explicitly here
+                address, 
+                pan_card, 
                 latitude: latitude ? parseFloat(latitude) : null, 
                 longitude: longitude ? parseFloat(longitude) : null, 
                 profile_pic_url: profilePicUrl,
