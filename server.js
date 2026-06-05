@@ -249,36 +249,78 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 });
 
 // ==========================================
-// 🔥 7. DEDICATED ADDRESS MANAGEMENT API (NEW)
+// 🔥 ADDRESS MANAGEMENT APIs (user_addresses टेबल के साथ) 🔥
 // ==========================================
-app.put('/api/user/address', async (req, res) => {
-    const { userId, address, city, pincode } = req.body;
 
+// 1. GET Addresses (यूज़र के सारे एड्रेस मंगाने के लिए)
+app.get('/api/addresses/:userId', async (req, res) => {
+    const { userId } = req.params;
     try {
-        // Formatting the address into a detailed string if multiple fields are provided
-        let fullAddress = address;
-        if (city && pincode) {
-            fullAddress = `${address}, ${city} - ${pincode}`;
-        }
-
         const { data, error } = await supabase
-            .from('users')
-            .update({ address: fullAddress })
-            .eq('id', userId)
-            .select('address')
-            .single();
+            .from('user_addresses') // FIXED: addresses se user_addresses kar diya
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
 
         if (error) return res.status(400).json({ success: false, message: error.message });
 
-        return res.status(200).json({ 
-            success: true, 
-            message: "Delivery Address updated successfully!", 
-            address: data.address 
-        });
+        return res.status(200).json({ success: true, addresses: data });
     } catch (err) {
         return res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// 2. ADD Address (नया एड्रेस सेव करने के लिए)
+app.post('/api/addresses', async (req, res) => {
+    const { userId, full_address, landmark, pincode } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('user_addresses') // FIXED
+            .insert([{ user_id: userId, full_address, landmark, pincode }]);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(201).json({ success: true, message: "Address added successfully!" });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. EDIT Address (पुराना एड्रेस अपडेट करने के लिए)
+app.put('/api/addresses/:id', async (req, res) => {
+    const { id } = req.params;
+    const { full_address, landmark, pincode } = req.body;
+    try {
+        const { error } = await supabase
+            .from('user_addresses') // FIXED
+            .update({ full_address, landmark, pincode })
+            .eq('id', id);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: "Address updated successfully!" });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. DELETE Address (एड्रेस डिलीट करने के लिए)
+app.delete('/api/addresses/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase
+            .from('user_addresses') // FIXED
+            .delete()
+            .eq('id', id);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: "Address deleted successfully!" });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 // ==========================================
 // 8. CHANGE PASSWORD API
@@ -301,7 +343,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 9. APPLY FOR MEAL LEAVE API (NEW)
+// 🔥 9. APPLY FOR MEAL LEAVE API
 // ==========================================
 app.post('/api/leave', async (req, res) => {
     const { userId, startDate, endDate, reason } = req.body;
@@ -327,7 +369,7 @@ app.post('/api/leave', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 10. GET MEAL LEAVE HISTORY API (NEW)
+// 🔥 10. GET MEAL LEAVE HISTORY API
 // ==========================================
 app.get('/api/leave/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -362,7 +404,7 @@ app.post('/api/orders', async (req, res) => {
                 total_amount: grandTotal,
                 status: 'Pending',
                 payment_status: paymentMethod === 'Online' ? 'Paid' : 'Unpaid',
-                delivery_address: deliveryAddress // Saving specific delivery address for this order
+                delivery_address: deliveryAddress 
             }])
             .select()
             .single();
@@ -452,9 +494,12 @@ app.get('/api/cooks', async (req, res) => {
 });
 
 // ==========================================
-// 15. HOUSEWIFE (COOK) REGISTRATION API
+// 🔥 15. HOUSEWIFE (COOK) REGISTRATION API (FIXED) 🔥
 // ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
+    // Check incoming data
+    console.log("Cook Register Payload:", req.body);
+    
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
 
     try {
@@ -467,7 +512,13 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
         const { data, error } = await supabase
             .from('cooks')
             .insert([{ 
-                name, email, phone, password, kitchen_name, address, pan_card,
+                name, 
+                email, 
+                phone, 
+                password, 
+                kitchen_name, 
+                address, // Fixed: Added address explicitly here
+                pan_card, // Fixed: Added pan_card explicitly here
                 latitude: latitude ? parseFloat(latitude) : null, 
                 longitude: longitude ? parseFloat(longitude) : null, 
                 profile_pic_url: profilePicUrl,
