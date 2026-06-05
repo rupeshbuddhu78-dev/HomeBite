@@ -40,15 +40,13 @@
         .section-title { font-size: 1.5rem; color: var(--dark); font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
         .badge-price { background: var(--light-bg); color: var(--primary); padding: 5px 12px; border-radius: 12px; font-size: 0.9rem; }
 
-        /* === LEFT COL: ROUTINE STYLES (FIXED ALIGNMENT) === */
+        /* === LEFT COL: ROUTINE STYLES === */
         .day-card { border: 1px solid var(--border); border-radius: 15px; margin-bottom: 15px; overflow: hidden; }
         .day-header { background: #fafafa; padding: 12px 20px; font-weight: 700; color: var(--primary); font-size: 1.1rem; border-bottom: 1px solid var(--border); }
         .meal-list { list-style: none; padding: 15px 20px; }
         
-        /* Fixed layout for meal items */
         .meal-list li { display: flex; align-items: flex-start; margin-bottom: 12px; font-size: 0.95rem; }
         .meal-list li:last-child { margin-bottom: 0; }
-        /* Gave min-width and flex-shrink to prevent breaking */
         .meal-time { font-weight: 600; min-width: 125px; flex-shrink: 0; color: #555; }
         .meal-food { color: var(--dark); font-weight: 500; flex: 1; line-height: 1.4; }
 
@@ -64,9 +62,9 @@
         .add-btn { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; text-decoration: none; display: inline-block; }
         .add-btn:hover { background: var(--primary); color: white; }
 
-        /* Offline Message */
-        .offline-msg { text-align: center; padding: 40px 20px; color: #888; }
-        .offline-msg img { width: 100px; opacity: 0.5; margin-bottom: 15px; }
+        /* Offline/Loading Message */
+        .offline-msg, .loading-msg { text-align: center; padding: 40px 20px; color: #888; width: 100%; }
+        .loading-msg { font-size: 1.2rem; font-weight: 500; }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -86,299 +84,159 @@
     </nav>
 
     <div class="profile-container">
-        <div class="profile-header" id="profileHeader">
-            </div>
+        <div id="mainLoading" class="loading-msg">⏳ Connecting to Kitchen, please wait...</div>
 
-        <div class="layout-grid">
-            
-            <div class="col-left">
-                <h2 class="section-title">
-                    📅 Weekly Routine
-                    <span class="badge-price">₹4,000 / month</span>
-                </h2>
-                <div id="routineContainer">
-                    </div>
-                <a href="https://wa.me/1234567890?text=I want to buy the monthly subscription" target="_blank" class="btn-wa" style="width: 100%; text-align: center; margin-top: 20px; background: var(--primary); box-shadow: none;">Subscribe to Monthly Plan</a>
-            </div>
+        <div id="contentWrapper" style="display: none;">
+            <div class="profile-header" id="profileHeader"></div>
 
-            <div class="col-right">
-                <h2 class="section-title">
-                    🔥 Order Live Now
-                    <span class="badge-price">Instant Delivery</span>
-                </h2>
-                <div id="liveMenuContainer">
-                    </div>
-            </div>
+            <div class="layout-grid">
+                
+                <div class="col-left">
+                    <h2 class="section-title">
+                        📅 Weekly Routine
+                        <span class="badge-price">₹4,000 / month</span>
+                    </h2>
+                    <div id="routineContainer"></div>
+                    <a id="subscribeBtn" href="#" target="_blank" class="btn-wa" style="width: 100%; text-align: center; margin-top: 20px; background: var(--primary); box-shadow: none;">Subscribe to Monthly Plan</a>
+                </div>
 
+                <div class="col-right">
+                    <h2 class="section-title">
+                        🔥 Order Live Now
+                        <span class="badge-price">Instant Delivery</span>
+                    </h2>
+                    <div id="liveMenuContainer"></div>
+                </div>
+
+            </div>
         </div>
     </div>
 
     <script>
-        // MOCK DATABASE WITH 10 ONLINE CHEFS
-        const db = [
-            { 
-                id: 1, name: "Aarti Sharma", group: "Aarti Veg Kitchen", status: "Online", 
-                img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80", 
-                routine: [
-                    { day: "Monday", morning: "Poha & Chai", afternoon: "Rajma Chawal, Salad", night: "Paneer Sabzi, 4 Roti" },
-                    { day: "Tuesday", morning: "Aloo Paratha & Dahi", afternoon: "Chana Dal, Rice, Bhindi", night: "Mix Veg, 4 Roti" },
-                    { day: "Wednesday", morning: "Upma & Chutney", afternoon: "Kadhi Pakora, Rice", night: "Lauki Kofta, 4 Roti" },
-                    { day: "Thursday", morning: "Sandwich & Juice", afternoon: "Dal Tadka, Rice, Papad", night: "Aloo Matar, 4 Roti" },
-                    { day: "Friday", morning: "Idli Sambar", afternoon: "Chhole Chawal", night: "Palak Paneer, 4 Roti" },
-                    { day: "Saturday", morning: "Puri Sabzi", afternoon: "Veg Pulao & Raita", night: "Dal Makhani, 4 Roti" },
-                    { day: "Sunday", morning: "Chole Bhature", afternoon: "Special Veg Thali", night: "Khichdi & Chokha" }
-                ],
-                liveItems: [
-                    { name: "Special Rajma Chawal", desc: "Punjabi style rajma with jeera rice & onion salad.", price: "₹80", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Paneer Butter Masala", desc: "Rich paneer gravy with 4 butter rotis.", price: "₹120", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Home-style Thali", desc: "Dal, Rice, 1 Dry Sabzi, 4 Roti, Papad.", price: "₹90", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Aloo Paratha (2 pcs)", desc: "Stuffed aloo paratha served with fresh curd and pickle.", price: "₹60", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Healthy Veg Pulao", desc: "Basmati rice cooked with fresh seasonal vegetables.", price: "₹70", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            { 
-                id: 2, name: "Sunita Verma", group: "Sunita Healthy Tiffin", status: "Online", 
-                img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80", 
-                routine: [
-                    { day: "Monday", morning: "Oats & Fruits", afternoon: "Dal, Brown Rice, Sabzi", night: "2 Roti, Green Veg" },
-                    { day: "Tuesday", morning: "Besan Chilla", afternoon: "Mix Dal, Rice", night: "Lauki Sabzi, 2 Roti" },
-                    { day: "Wednesday", morning: "Fruit Salad", afternoon: "Khichdi & Kadhi", night: "Mix Veg, 2 Roti" },
-                    { day: "Thursday", morning: "Sprouts Chat", afternoon: "Rajma, Rice", night: "Paneer Bhurji, 2 Roti" },
-                    { day: "Friday", morning: "Poha", afternoon: "Chole, Rice", night: "Aloo Palak, 2 Roti" },
-                    { day: "Saturday", morning: "Dalia", afternoon: "Veg Pulao", night: "Dal Tadka, 2 Roti" },
-                    { day: "Sunday", morning: "Healthy Sandwich", afternoon: "Special Diet Thali", night: "Light Soup & Salad" }
-                ],
-                liveItems: [
-                    { name: "Healthy Diet Thali", desc: "Brown rice, mixed dal, green sabzi & salad.", price: "₹100", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Oats & Fruits Bowl", desc: "Fresh fruits with healthy oats.", price: "₹70", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Sprouts Salad", desc: "Protein rich moong sprouts.", price: "₹50", img: "https://www.sharmispassions.com/wp-content/uploads/2021/03/MoongSproutsSalad2-500x500.jpg" },
-                    { name: "Besan Chilla", desc: "2 healthy besan chillas with green chutney.", price: "₹60", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Khichdi & Kadhi", desc: "Comforting home-style khichdi.", price: "₹80", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 3, name: "Priya Singh", group: "Priya Homestyle Food", status: "Online",
-                img: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                    { day: "Monday", morning: "Bread Pakora", afternoon: "Dal Fry, Rice, Aloo Bhujia", night: "Paneer Paratha" },
-                    { day: "Tuesday", morning: "Macaroni", afternoon: "Chola, Rice", night: "Mix Veg, Roti" },
-                    { day: "Wednesday", morning: "Poha", afternoon: "Kadhi, Rice, Bhindi", night: "Dal Tadka, Roti" },
-                    { day: "Thursday", morning: "Upma", afternoon: "Rajma, Rice", night: "Aloo Paratha, Dahi" },
-                    { day: "Friday", morning: "Aloo Sandwich", afternoon: "Dal, Rice, Mix Sabzi", night: "Matar Paneer, Roti" },
-                    { day: "Saturday", morning: "Chowmein", afternoon: "Veg Biryani, Raita", night: "Egg Curry, Roti (Optional)" },
-                    { day: "Sunday", morning: "Puri Sabzi", afternoon: "Special Chicken/Paneer Thali", night: "Light Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Veg Biryani & Raita", desc: "Aromatic biryani with fresh raita.", price: "₹110", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Paneer Paratha (2 pcs)", desc: "Stuffed paneer parathas.", price: "₹80", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Dal Fry & Jeera Rice", desc: "Classic comfort food.", price: "₹75", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Matar Paneer Combos", desc: "Matar paneer with 4 rotis.", price: "₹130", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Bread Pakora & Chai", desc: "Evening snack special.", price: "₹50", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 4, name: "Meena Devi", group: "Meena Aunty Rasoi", status: "Online",
-                img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Suji Halwa", afternoon: "Dal, Rice, Aloo Sabzi", night: "Bhindi Masala, Roti" },
-                     { day: "Tuesday", morning: "Poha", afternoon: "Kadhi Bari, Rice", night: "Mix Sabzi, Roti" },
-                     { day: "Wednesday", morning: "Chura Matar", afternoon: "Rajma, Rice", night: "Paneer Sabzi, Roti" },
-                     { day: "Thursday", morning: "Bread Jam", afternoon: "Dal Makhani, Rice", night: "Aloo Gobi, Roti" },
-                     { day: "Friday", morning: "Upma", afternoon: "Chola, Rice", night: "Lauki Sabzi, Roti" },
-                     { day: "Saturday", morning: "Idli", afternoon: "Veg Pulao", night: "Dal Tadka, Roti" },
-                     { day: "Sunday", morning: "Litti Chokha", afternoon: "Special Thali", night: "Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Litti Chokha (4 pcs)", desc: "Authentic bihari litti with baingan chokha.", price: "₹70", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Kadhi Bari & Rice", desc: "Traditional kadhi with soft baris.", price: "₹80", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Suji Halwa & Puri", desc: "Sweet halwa with 4 puris.", price: "₹60", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Dal Makhani Combo", desc: "Rich dal makhani with jeera rice.", price: "₹100", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Simple Thali", desc: "Dal, rice, sabzi, roti.", price: "₹80", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 5, name: "Anjali Gupta", group: "Anjali Fresh Bites", status: "Online",
-                img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Aloo Paratha", afternoon: "Dal, Rice, Mix Veg", night: "Paneer Bhurji, Roti" },
-                     { day: "Tuesday", morning: "Sandwich", afternoon: "Rajma, Rice", night: "Dal Fry, Roti" },
-                     { day: "Wednesday", morning: "Poha", afternoon: "Chole, Rice", night: "Bhindi, Roti" },
-                     { day: "Thursday", morning: "Oats", afternoon: "Kadhi, Rice", night: "Mix Veg, Roti" },
-                     { day: "Friday", morning: "Besan Chilla", afternoon: "Dal Makhani, Rice", night: "Aloo Matar, Roti" },
-                     { day: "Saturday", morning: "Upma", afternoon: "Veg Pulao", night: "Dal Tadka, Roti" },
-                     { day: "Sunday", morning: "Puri Sabzi", afternoon: "Special Veg Thali", night: "Light Soup/Salad" }
-                ],
-                liveItems: [
-                    { name: "Paneer Bhurji Combo", desc: "Spicy paneer bhurji with 4 rotis.", price: "₹110", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Chole Bhature (2 pcs)", desc: "Delhi style chole bhature.", price: "₹90", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Mix Veg Dry", desc: "Seasonal mix vegetables with roti.", price: "₹80", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Aloo Paratha Breakfast", desc: "2 Parathas with curd.", price: "₹65", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Special Veg Thali", desc: "Complete meal with sweet.", price: "₹120", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 6, name: "Kavita Yadav", group: "Kavita Premium Tiffin", status: "Online",
-                img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Egg Bhurji/Veg Sandwich", afternoon: "Chicken Curry/Paneer, Rice", night: "Dal Tadka, Roti" },
-                     { day: "Tuesday", morning: "Poha", afternoon: "Dal, Rice, Sabzi", night: "Mix Veg, Roti" },
-                     { day: "Wednesday", morning: "Omelette/Chilla", afternoon: "Egg Curry/Chole, Rice", night: "Bhindi, Roti" },
-                     { day: "Thursday", morning: "Upma", afternoon: "Rajma, Rice", night: "Aloo Gobi, Roti" },
-                     { day: "Friday", morning: "Aloo Paratha", afternoon: "Fish Curry/Dal Makhani, Rice", night: "Paneer, Roti" },
-                     { day: "Saturday", morning: "Sandwich", afternoon: "Chicken Biryani/Veg Pulao", night: "Dal Fry, Roti" },
-                     { day: "Sunday", morning: "Puri Sabzi", afternoon: "Special Non-Veg/Veg Thali", night: "Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Chicken Curry Combo", desc: "Home-style chicken curry with rice.", price: "₹140", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Egg Curry & Rice", desc: "2 eggs in spicy gravy with rice.", price: "₹100", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Chicken Biryani", desc: "Dum biryani with raita.", price: "₹150", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Premium Veg Thali", desc: "Paneer, Dal, Rice, Roti, Sweet.", price: "₹120", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Egg Bhurji Pav", desc: "Spicy egg bhurji with 2 pavs.", price: "₹70", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 7, name: "Rekha Jha", group: "Rekha Mithila Food", status: "Online",
-                img: "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Chura Dahi", afternoon: "Dal, Rice, Tarua", night: "Aloo Parval, Roti" },
-                     { day: "Tuesday", morning: "Poha", afternoon: "Kadhi, Rice", night: "Mix Sabzi, Roti" },
-                     { day: "Wednesday", morning: "Sattu Paratha", afternoon: "Rajma, Rice", night: "Dal Tadka, Roti" },
-                     { day: "Thursday", morning: "Upma", afternoon: "Chole, Rice", night: "Bhindi, Roti" },
-                     { day: "Friday", morning: "Bread Sandwich", afternoon: "Dal Makhani, Rice", night: "Paneer, Roti" },
-                     { day: "Saturday", morning: "Idli", afternoon: "Veg Pulao", night: "Dal Fry, Roti" },
-                     { day: "Sunday", morning: "Litti Chokha", afternoon: "Special Mithila Thali", night: "Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Authentic Litti Chokha", desc: "4 Littis dipped in ghee with chokha.", price: "₹80", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Sattu Paratha (2 pcs)", desc: "Stuffed sattu paratha with pickle.", price: "₹65", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Mithila Thali", desc: "Rice, Dal, Tarua, Sabzi, Papar.", price: "₹100", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Chura Dahi Cheeni", desc: "Traditional morning breakfast.", price: "₹50", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Paneer Sabzi Combo", desc: "Paneer gravy with 4 rotis.", price: "₹110", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 8, name: "Neelam Pandey", group: "Neelam Pure Veg", status: "Online",
-                img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Poha", afternoon: "Dal, Rice, Aloo Gobi", night: "Mix Veg, Roti" },
-                     { day: "Tuesday", morning: "Aloo Paratha", afternoon: "Rajma, Rice", night: "Dal Tadka, Roti" },
-                     { day: "Wednesday", morning: "Upma", afternoon: "Kadhi, Rice", night: "Paneer Bhurji, Roti" },
-                     { day: "Thursday", morning: "Sandwich", afternoon: "Chole, Rice", night: "Bhindi, Roti" },
-                     { day: "Friday", morning: "Besan Chilla", afternoon: "Dal Makhani, Rice", night: "Aloo Matar, Roti" },
-                     { day: "Saturday", morning: "Dalia", afternoon: "Veg Pulao", night: "Dal Fry, Roti" },
-                     { day: "Sunday", morning: "Puri Sabzi", afternoon: "Special Veg Thali", night: "Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Pure Veg Thali", desc: "Dal, Rice, Sabzi, 4 Roti, Salad.", price: "₹90", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Aloo Gobi Combo", desc: "Dry aloo gobi with 4 rotis.", price: "₹80", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Rajma Chawal", desc: "Homestyle rajma with rice.", price: "₹75", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Besan Chilla (2 pcs)", desc: "Healthy besan chilla.", price: "₹60", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Dal Makhani Rice", desc: "Creamy dal makhani with jeera rice.", price: "₹100", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 9, name: "Pooja Mishra", group: "Pooja Dabba Service", status: "Online",
-                img: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Idli Sambar", afternoon: "Dal, Rice, Sabzi", night: "Paneer Paratha" },
-                     { day: "Tuesday", morning: "Poha", afternoon: "Chole, Rice", night: "Mix Veg, Roti" },
-                     { day: "Wednesday", morning: "Aloo Paratha", afternoon: "Rajma, Rice", night: "Dal Fry, Roti" },
-                     { day: "Thursday", morning: "Upma", afternoon: "Kadhi, Rice", night: "Bhindi, Roti" },
-                     { day: "Friday", morning: "Sandwich", afternoon: "Dal Makhani, Rice", night: "Aloo Matar, Roti" },
-                     { day: "Saturday", morning: "Dosa", afternoon: "Veg Pulao", night: "Dal Tadka, Roti" },
-                     { day: "Sunday", morning: "Puri Sabzi", afternoon: "Special Thali", night: "Khichdi" }
-                ],
-                liveItems: [
-                    { name: "Idli Sambar (3 pcs)", desc: "Soft idlis with tangy sambar.", price: "₹70", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Paneer Paratha (2 pcs)", desc: "Stuffed parathas with curd.", price: "₹85", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Chole Chawal", desc: "Spicy chole with steamed rice.", price: "₹80", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Masala Dosa", desc: "Crispy dosa with sambar & chutney.", price: "₹90", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Veg Pulao Combo", desc: "Pulao with raita & papad.", price: "₹75", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            },
-            {
-                id: 10, name: "Sushma Kumari", group: "Sushma Diet Kitchen", status: "Online",
-                img: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=150&q=80",
-                routine: [
-                     { day: "Monday", morning: "Oats & Fruits", afternoon: "Brown Rice, Dal, Salad", night: "2 Roti, Green Veg" },
-                     { day: "Tuesday", morning: "Sprouts Salad", afternoon: "Mix Dal, Rice, Salad", night: "Lauki Sabzi, 2 Roti" },
-                     { day: "Wednesday", morning: "Besan Chilla", afternoon: "Khichdi & Kadhi", night: "Mix Veg, 2 Roti" },
-                     { day: "Thursday", morning: "Fruit Bowl", afternoon: "Rajma, Brown Rice", night: "Paneer Bhurji, 2 Roti" },
-                     { day: "Friday", morning: "Poha", afternoon: "Chole, Rice, Salad", night: "Aloo Palak, 2 Roti" },
-                     { day: "Saturday", morning: "Dalia", afternoon: "Veg Pulao", night: "Dal Tadka, 2 Roti" },
-                     { day: "Sunday", morning: "Healthy Sandwich", afternoon: "Special Diet Thali", night: "Light Soup & Salad" }
-                ],
-                liveItems: [
-                    { name: "Diet Thali", desc: "Brown rice, dal, boiled veggies.", price: "₹110", img: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Sprouts & Paneer Salad", desc: "High protein diet salad.", price: "₹80", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Oats & Fruits", desc: "Healthy morning breakfast.", price: "₹70", img: "https://images.unsplash.com/photo-1589302168068-964664d93cb0?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Lauki Sabzi Combo", desc: "Healthy lauki with 3 rotis.", price: "₹75", img: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=150&q=80" },
-                    { name: "Mix Veg Soup", desc: "Warm and healthy vegetable soup.", price: "₹60", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=150&q=80" }
-                ]
-            }
-        ];
+        // 🔴 UPDATE THIS: Apna live Render server URL yahan dalein
+        const API_BASE_URL = "https://your-backend-url.onrender.com"; 
 
-        // 1. Get ID from URL
+        // 1. Get ID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const chefId = parseInt(urlParams.get('id')) || 1; 
-        const chef = db.find(c => c.id === chefId) || db[0];
+        const chefId = urlParams.get('id'); 
 
-        // 2. Render Header
-        const isOnline = chef.status === 'Online';
-        document.getElementById('profileHeader').innerHTML = `
-            <div class="header-left">
-                <img src="${chef.img}" alt="${chef.name}">
-                <div class="header-info">
-                    <h1>${chef.name}</h1>
-                    <div class="status-badge ${!isOnline ? 'status-offline' : ''}">
-                        ${isOnline ? '🟢 Cooking Live Now' : '🔴 Currently Offline'}
-                    </div>
-                </div>
-            </div>
-            <a href="https://wa.me/1234567890?text=I want to join ${chef.group}" target="_blank" class="btn-wa">💬 Join WhatsApp Group</a>
-        `;
+        async function loadChefProfile() {
+            if (!chefId) {
+                document.getElementById('mainLoading').innerHTML = "❌ No Chef ID provided in the link!";
+                return;
+            }
 
-        // 3. Render Routine (Left Column)
-        const routineBox = document.getElementById('routineContainer');
-        chef.routine.forEach(dayData => {
-            routineBox.innerHTML += `
-                <div class="day-card">
-                    <div class="day-header">${dayData.day}</div>
-                    <ul class="meal-list">
-                        <li><span class="meal-time">🌅 Morning:</span> <span class="meal-food">${dayData.morning}</span></li>
-                        <li><span class="meal-time">☀️ Afternoon:</span> <span class="meal-food">${dayData.afternoon}</span></li>
-                        <li><span class="meal-time">🌙 Night:</span> <span class="meal-food">${dayData.night}</span></li>
-                    </ul>
-                </div>
-            `;
-        });
+            try {
+                // Parallel API Requests: Chef aur uski Routine ko live database se fetch karein
+                const [chefRes, routineRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/cooks`),
+                    fetch(`${API_BASE_URL}/api/cook/routine/${chefId}`)
+                ]);
 
-        // 4. Render Live Menu (Right Column)
-        const liveBox = document.getElementById('liveMenuContainer');
-        if (isOnline && chef.liveItems.length > 0) {
-            chef.liveItems.forEach(item => {
-                liveBox.innerHTML += `
-                    <div class="live-item">
-                        <img src="${item.img}" alt="${item.name}">
-                        <div class="item-info">
-                            <h4>${item.name}</h4>
-                            <p>${item.desc}</p>
-                            <span class="price">${item.price}</span>
+                const chefData = await chefRes.json();
+                const routineData = await routineRes.json();
+
+                if (!chefData.success) {
+                    throw new Error("Failed to load cooks list");
+                }
+
+                // Pure list mein se select kiya gaya chef dhoondhein
+                const chef = chefData.kitchens.find(c => c.id == chefId);
+
+                if (!chef) {
+                    document.getElementById('mainLoading').innerHTML = "❌ Chef not found in database!";
+                    return;
+                }
+
+                // Hide loading screen, show main content
+                document.getElementById('mainLoading').style.display = 'none';
+                document.getElementById('contentWrapper').style.display = 'block';
+
+                // 2. Render Header Information
+                const isOnline = chef.is_open === true || chef.is_open === 'true';
+                const chefImg = chef.profile_pic_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80";
+                const kitchenName = chef.kitchen_name || `${chef.name}'s Kitchen`;
+                const whatsappNumber = chef.phone_number || "911234567890"; // Fallback phone
+
+                document.getElementById('profileHeader').innerHTML = `
+                    <div class="header-left">
+                        <img src="${chefImg}" alt="${chef.name}">
+                        <div class="header-info">
+                            <h1>${chef.name}</h1>
+                            <p style="color: #666; font-size: 0.95rem; margin-bottom: 5px;">📍 ${kitchenName}</p>
+                            <div class="status-badge ${!isOnline ? 'status-offline' : ''}">
+                                ${isOnline ? '🟢 Cooking Live Now' : '🔴 Currently Offline'}
+                            </div>
                         </div>
-                        <a href="https://wa.me/1234567890?text=I want to order ${item.name} (${item.price})" target="_blank" class="add-btn">Add +</a>
                     </div>
+                    <a href="https://wa.me/${whatsappNumber}?text=Hi ${chef.name}, I want to join your ${kitchenName} group!" target="_blank" class="btn-wa">💬 Join WhatsApp Group</a>
                 `;
-            });
-        } else {
-            // Show Offline Message
-            liveBox.innerHTML = `
-                <div class="offline-msg">
-                    <h2 style="font-size: 3rem; margin-bottom: 10px;">😴</h2>
-                    <h3>Chef is resting right now</h3>
-                    <p style="margin-top: 10px;">Live ordering is closed. However, you can still check the weekly routine and subscribe to the monthly plan on the left.</p>
-                </div>
-            `;
+
+                // Update Subscribe button dynamically
+                document.getElementById('subscribeBtn').href = `https://wa.me/${whatsappNumber}?text=Hi ${chef.name}, I want to buy your monthly subscription for ${kitchenName}`;
+
+                // 3. Render Weekly Routine
+                const routineBox = document.getElementById('routineContainer');
+                const routines = routineData.routines || [];
+
+                if (routines.length === 0) {
+                    routineBox.innerHTML = `<p style="color:#888; text-align:center; padding: 20px;">No weekly routine updated yet by the chef.</p>`;
+                } else {
+                    // Days sorting array taaki Mon-Sun order sahi rahe
+                    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                    routines.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week));
+
+                    routines.forEach(dayData => {
+                        routineBox.innerHTML += `
+                            <div class="day-card">
+                                <div class="day-header">${dayData.day_of_week} <span style="font-size:0.8rem; font-weight:normal; color:#888;">(${dayData.plan_type || 'Regular'})</span></div>
+                                <ul class="meal-list">
+                                    <li><span class="meal-time">🌅 Morning:</span> <span class="meal-food">${dayData.morning_meal || 'Not available'}</span></li>
+                                    <li><span class="meal-time">☀️ Afternoon:</span> <span class="meal-food">${dayData.afternoon_meal || 'Not available'}</span></li>
+                                    <li><span class="meal-time">🌙 Night:</span> <span class="meal-food">${dayData.night_meal || 'Not available'}</span></li>
+                                </ul>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 4. Render Live Menu
+                const liveBox = document.getElementById('liveMenuContainer');
+                
+                // Agar chef online hai aur uske paas liveItems hain (Note: Agar alag items endpoint hai toh aap use use kar sakte hain)
+                if (isOnline && chef.liveItems && chef.liveItems.length > 0) {
+                    chef.liveItems.forEach(item => {
+                        liveBox.innerHTML += `
+                            <div class="live-item">
+                                <img src="${item.img || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80'}" alt="${item.name}">
+                                <div class="item-info">
+                                    <h4>${item.name}</h4>
+                                    <p>${item.desc || 'Freshly cooked home meal.'}</p>
+                                    <span class="price">${item.price}</span>
+                                </div>
+                                <a href="https://wa.me/${whatsappNumber}?text=I want to order live item: ${item.name} (${item.price})" target="_blank" class="add-btn">Add +</a>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // Show Offline Message
+                    liveBox.innerHTML = `
+                        <div class="offline-msg">
+                            <h2 style="font-size: 3rem; margin-bottom: 10px;">😴</h2>
+                            <h3>Chef is resting right now</h3>
+                            <p style="margin-top: 10px;">Live ordering is closed. However, you can still check the weekly routine and subscribe to the monthly plan on the left.</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error("Error loading profile:", error);
+                document.getElementById('mainLoading').innerHTML = `❌ Error: Connection failed! Make sure your backend server is active.`;
+            }
         }
+
+        // Initialize on page load
+        window.onload = loadChefProfile;
     </script>
 </body>
 </html>
