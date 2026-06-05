@@ -155,6 +155,9 @@
     </div>
 
     <script>
+        // 🔴 UPDATE REAL BACKEND URL
+        const API_URL = "https://homebite-gepq.onrender.com";
+
         function updateCartCount() {
             let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
             let count = cart.reduce((total, item) => total + item.quantity, 0);
@@ -173,8 +176,8 @@
             const password = document.getElementById('password').value;
 
             try {
-                // Secure backend call hitting the express server.js
-                const response = await fetch('/api/login', {
+                // Hitting the real server API
+                const response = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -185,7 +188,10 @@
                 if (data.success) {
                     alert("Login Successful!");
                     
-                    // User data aur dynamic session token ko store karo local storage me
+                    // 🌟 MAIN FIX: Ab 'userData' aur 'user' dono naam se save kar do 
+                    // taaki kisi bhi page (profile/cart) par problem na aaye.
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('userData', JSON.stringify(data.user));
                     localStorage.setItem('homeBiteUser', JSON.stringify(data.user));
                     localStorage.setItem('homeBiteToken', data.token);
 
@@ -204,26 +210,22 @@
         }
 
         // ==========================================
-        // FIX: MOBILE NAVBAR CLOSE LOGIC
+        // MOBILE NAVBAR CLOSE LOGIC
         // ==========================================
         const navLinks = document.getElementById('navLinks');
         const menuToggle = document.getElementById('menuToggle');
 
-        // 1. Open/Close menu when clicking the hamburger icon
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
         });
 
-        // 2. Close menu when clicking ANY link inside the navbar
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
             });
         });
 
-        // 3. Close menu when clicking ANYWHERE outside the navbar
         document.addEventListener('click', (event) => {
-            // Check if menu is active, and if the click was outside the menu AND the toggle button
             if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
                 navLinks.classList.remove('active');
             }
