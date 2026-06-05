@@ -27,7 +27,7 @@
         .header-left img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #ffe6d5; }
         .header-info h1 { font-size: 2rem; color: var(--dark); margin-bottom: 5px; }
         .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; background: #e8f9f0; color: #00d26a; }
-        .status-offline { background: #f0f0f0; color: #777; }
+        .status-offline { background: #fff5f5; color: #fa5252; }
         
         .btn-wa { background: var(--whatsapp); color: white; padding: 12px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2); transition: 0.3s; }
         .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3); }
@@ -62,11 +62,10 @@
         .add-btn { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; text-decoration: none; display: inline-block; }
         .add-btn:hover { background: var(--primary); color: white; }
 
-        /* Offline/Loading Message */
-        .offline-msg, .loading-msg { text-align: center; padding: 40px 20px; color: #888; width: 100%; }
-        .loading-msg { font-size: 1.2rem; font-weight: 500; }
+        /* Loading / Error */
+        .loading-msg, .error-msg { text-align: center; padding: 50px 20px; font-size: 1.2rem; color: #666; font-weight: 500; }
+        .offline-msg { text-align: center; padding: 40px 20px; color: #888; width: 100%;}
 
-        /* Mobile Adjustments */
         @media (max-width: 768px) {
             .profile-header { justify-content: center; text-align: center; }
             .header-left { flex-direction: column; }
@@ -79,12 +78,12 @@
 <body>
 
     <nav class="navbar">
-        <a href="menu.html" class="back-btn">⬅ Back</a>
+        <a href="menu.html" class="back-btn">⬅ Back to Chefs</a>
         <a href="index.html" class="logo">Home<span>Bite</span></a>
     </nav>
 
     <div class="profile-container">
-        <div id="mainLoading" class="loading-msg">⏳ Connecting to Kitchen, please wait...</div>
+        <div id="mainLoading" class="loading-msg">⏳ Fetching Chef details from Database...</div>
 
         <div id="contentWrapper" style="display: none;">
             <div class="profile-header" id="profileHeader"></div>
@@ -94,7 +93,7 @@
                 <div class="col-left">
                     <h2 class="section-title">
                         📅 Weekly Routine
-                        <span class="badge-price">₹4,000 / month</span>
+                        <span class="badge-price" id="monthlyPriceBadge">Loading...</span>
                     </h2>
                     <div id="routineContainer"></div>
                     <a id="subscribeBtn" href="#" target="_blank" class="btn-wa" style="width: 100%; text-align: center; margin-top: 20px; background: var(--primary); box-shadow: none;">Subscribe to Monthly Plan</a>
@@ -113,76 +112,82 @@
     </div>
 
     <script>
-        // 🔴 UPDATE THIS: Apna live Render server URL yahan dalein
-        const API_BASE_URL = "https://your-backend-url.onrender.com"; 
+        // 🔴 REAL BACKEND RENDER URL
+        const API_BASE_URL = "https://homebite-gepq.onrender.com"; 
 
-        // 1. Get ID from URL parameters
+        // URL Se Chef ki ID Nikalna
         const urlParams = new URLSearchParams(window.location.search);
         const chefId = urlParams.get('id'); 
 
         async function loadChefProfile() {
             if (!chefId) {
-                document.getElementById('mainLoading').innerHTML = "❌ No Chef ID provided in the link!";
+                document.getElementById('mainLoading').innerHTML = "❌ No Chef ID provided! Please go back and select a Chef.";
                 return;
             }
 
             try {
-                // Parallel API Requests: Chef aur uski Routine ko live database se fetch karein
-                const [chefRes, routineRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/cooks`),
-                    fetch(`${API_BASE_URL}/api/cook/routine/${chefId}`)
+                // 🚀 TEEN API EK SATH CALL HONGAY (Profile, Routine, aur Food Items)
+                const [chefRes, routineRes, menuRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/cook/profile/${chefId}`),
+                    fetch(`${API_BASE_URL}/api/cook/routine/${chefId}`),
+                    fetch(`${API_BASE_URL}/api/cook/menu/${chefId}`)
                 ]);
 
                 const chefData = await chefRes.json();
                 const routineData = await routineRes.json();
+                const menuData = await menuRes.json();
 
                 if (!chefData.success) {
-                    throw new Error("Failed to load cooks list");
+                    throw new Error("Failed to load chef details.");
                 }
 
-                // Pure list mein se select kiya gaya chef dhoondhein
-                const chef = chefData.kitchens.find(c => c.id == chefId);
-
+                const chef = chefData.cook;
                 if (!chef) {
                     document.getElementById('mainLoading').innerHTML = "❌ Chef not found in database!";
                     return;
                 }
 
-                // Hide loading screen, show main content
+                // Everything successful, Show Content
                 document.getElementById('mainLoading').style.display = 'none';
                 document.getElementById('contentWrapper').style.display = 'block';
 
-                // 2. Render Header Information
+                // ==============================
+                // 1. RENDER HEADER (Chef Profile)
+                // ==============================
                 const isOnline = chef.is_open === true || chef.is_open === 'true';
                 const chefImg = chef.profile_pic_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80";
                 const kitchenName = chef.kitchen_name || `${chef.name}'s Kitchen`;
-                const whatsappNumber = chef.phone_number || "911234567890"; // Fallback phone
+                const whatsappNumber = chef.phone || "911234567890"; 
 
                 document.getElementById('profileHeader').innerHTML = `
                     <div class="header-left">
                         <img src="${chefImg}" alt="${chef.name}">
                         <div class="header-info">
                             <h1>${chef.name}</h1>
-                            <p style="color: #666; font-size: 0.95rem; margin-bottom: 5px;">📍 ${kitchenName}</p>
+                            <p style="color: #666; font-size: 0.95rem; margin-bottom: 5px;">📍 ${kitchenName} - ${chef.address || 'Patna'}</p>
                             <div class="status-badge ${!isOnline ? 'status-offline' : ''}">
-                                ${isOnline ? '🟢 Cooking Live Now' : '🔴 Currently Offline'}
+                                ${isOnline ? '🟢 Cooking Live Now' : '🔴 Currently Closed'}
                             </div>
                         </div>
                     </div>
-                    <a href="https://wa.me/${whatsappNumber}?text=Hi ${chef.name}, I want to join your ${kitchenName} group!" target="_blank" class="btn-wa">💬 Join WhatsApp Group</a>
+                    <a href="https://wa.me/91${whatsappNumber}?text=Hi ${chef.name}, I want to join your ${kitchenName} group!" target="_blank" class="btn-wa">💬 Join WhatsApp Group</a>
                 `;
 
-                // Update Subscribe button dynamically
-                document.getElementById('subscribeBtn').href = `https://wa.me/${whatsappNumber}?text=Hi ${chef.name}, I want to buy your monthly subscription for ${kitchenName}`;
+                // Update Monthly Subscribe Button Link
+                document.getElementById('subscribeBtn').href = `https://wa.me/91${whatsappNumber}?text=Hi ${chef.name}, I want to buy your monthly tiffin subscription.`;
 
-                // 3. Render Weekly Routine
+                // ==============================
+                // 2. RENDER ROUTINE (`weekly_routines` table se)
+                // ==============================
                 const routineBox = document.getElementById('routineContainer');
                 const routines = routineData.routines || [];
 
                 if (routines.length === 0) {
                     routineBox.innerHTML = `<p style="color:#888; text-align:center; padding: 20px;">No weekly routine updated yet by the chef.</p>`;
+                    document.getElementById('monthlyPriceBadge').innerText = "Not Set";
                 } else {
-                    // Days sorting array taaki Mon-Sun order sahi rahe
+                    document.getElementById('monthlyPriceBadge').innerText = `₹${routines[0].monthly_price} / month`;
+
                     const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
                     routines.sort((a, b) => daysOrder.indexOf(a.day_of_week) - daysOrder.indexOf(b.day_of_week));
 
@@ -200,38 +205,46 @@
                     });
                 }
 
-                // 4. Render Live Menu
+                // ==============================
+                // 3. RENDER FOOD ITEMS (`food_items` table se)
+                // ==============================
                 const liveBox = document.getElementById('liveMenuContainer');
+                const menuItems = menuData.items || [];
                 
-                // Agar chef online hai aur uske paas liveItems hain (Note: Agar alag items endpoint hai toh aap use use kar sakte hain)
-                if (isOnline && chef.liveItems && chef.liveItems.length > 0) {
-                    chef.liveItems.forEach(item => {
+                if (isOnline && menuItems.length > 0) {
+                    menuItems.forEach(item => {
+                        const foodImage = item.image_url || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80';
                         liveBox.innerHTML += `
                             <div class="live-item">
-                                <img src="${item.img || 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80'}" alt="${item.name}">
+                                <img src="${foodImage}" alt="${item.name}">
                                 <div class="item-info">
                                     <h4>${item.name}</h4>
-                                    <p>${item.desc || 'Freshly cooked home meal.'}</p>
-                                    <span class="price">${item.price}</span>
+                                    <p>${item.type || 'Fresh home food'}</p>
+                                    <span class="price">₹${item.price}</span>
                                 </div>
-                                <a href="https://wa.me/${whatsappNumber}?text=I want to order live item: ${item.name} (${item.price})" target="_blank" class="add-btn">Add +</a>
+                                <a href="https://wa.me/91${whatsappNumber}?text=Hi! I want to order from live menu: ${item.name} (₹${item.price})" target="_blank" class="add-btn">Add +</a>
                             </div>
                         `;
                     });
-                } else {
-                    // Show Offline Message
+                } else if (!isOnline) {
                     liveBox.innerHTML = `
                         <div class="offline-msg">
                             <h2 style="font-size: 3rem; margin-bottom: 10px;">😴</h2>
-                            <h3>Chef is resting right now</h3>
-                            <p style="margin-top: 10px;">Live ordering is closed. However, you can still check the weekly routine and subscribe to the monthly plan on the left.</p>
+                            <h3>Kitchen is currently closed</h3>
+                            <p style="margin-top: 10px;">Live ordering is disabled. However, you can still check the weekly routine and subscribe to the monthly plan on the left.</p>
                         </div>
                     `;
+                } else {
+                    liveBox.innerHTML = `<div class="offline-msg"><p>No live food items available right now.</p></div>`;
                 }
 
             } catch (error) {
                 console.error("Error loading profile:", error);
-                document.getElementById('mainLoading').innerHTML = `❌ Error: Connection failed! Make sure your backend server is active.`;
+                document.getElementById('mainLoading').innerHTML = `
+                    <span style="font-size: 30px;">⚠️</span><br><br>
+                    ❌ Error: Connection failed!<br>
+                    <span style="font-size: 14px; color:#888;">Render server might be sleeping. Please refresh the page in 30 seconds.</span>
+                `;
             }
         }
 
