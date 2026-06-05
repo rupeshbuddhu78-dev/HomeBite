@@ -10,7 +10,7 @@
         /* === GLOBAL SETTINGS === */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background-color: #fdfbf7; color: #333; scroll-behavior: smooth; }
-        :root { --primary: #ff6b00; --secondary: #ff3c00; --whatsapp: #25D366; --dark: #121212; --border: #eaeaea; }
+        :root { --primary: #ff6b00; --secondary: #ff3c00; --dark: #121212; --border: #eaeaea; }
 
         /* Navbar */
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.04); position: sticky; top: 0; z-index: 100; }
@@ -26,10 +26,24 @@
         .left-section { flex: 2; min-width: 320px; }
         .section-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; color: var(--dark); }
         
-        /* Address Box */
+        /* Address Selection Box */
         .address-box { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .address-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-family: inherit; }
-        .address-input:focus { outline: none; border-color: var(--primary); }
+        .address-list { display: flex; flex-direction: column; gap: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+        
+        /* Individual Address Card */
+        .address-card { 
+            border: 2px solid #ddd; padding: 15px; border-radius: 12px; cursor: pointer; 
+            transition: 0.3s; background: #fafafa; display: flex; flex-direction: column; gap: 5px;
+        }
+        .address-card:hover { border-color: #ffb880; background: #fffdfb; }
+        .address-card.selected { border-color: var(--primary); background: #fff5ef; box-shadow: 0 4px 15px rgba(255, 107, 0, 0.1); }
+        
+        .addr-pin { font-size: 0.8rem; font-weight: 800; background: white; padding: 3px 10px; border-radius: 20px; display: inline-block; width: fit-content; border: 1px solid #ddd; color: var(--primary); }
+        .addr-text { font-size: 0.95rem; font-weight: 500; color: #333; line-height: 1.4; }
+        .addr-landmark { font-size: 0.8rem; color: #777; }
+        
+        .add-new-btn { display: inline-block; margin-top: 15px; font-size: 0.9rem; font-weight: 600; color: var(--primary); text-decoration: none; }
+        .add-new-btn:hover { text-decoration: underline; }
         
         /* Cart Items */
         .cart-item { background: white; padding: 15px; border-radius: 16px; display: flex; gap: 15px; align-items: center; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
@@ -82,12 +96,11 @@
         <div class="left-section">
             
             <div id="addressSection" class="address-box" style="display: none;">
-                <h2 class="section-title">📍 Delivery Address</h2>
-                <textarea id="fullAddress" class="address-input" rows="3" placeholder="Enter your full hostel/PG address..."></textarea>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="landmark" class="address-input" placeholder="Nearby Landmark (Optional)">
-                    <input type="text" id="pincode" class="address-input" placeholder="Pincode" maxlength="6">
+                <h2 class="section-title">📍 Select Delivery Address</h2>
+                <div class="address-list" id="addressListContainer">
+                    <p style="color: #888;">Fetching your saved addresses...</p>
                 </div>
+                <a href="manage-addresses.html" class="add-new-btn">+ Add a new address</a>
             </div>
 
             <h1 class="section-title">Your Cart 🛒</h1>
@@ -130,10 +143,62 @@
         const API_URL = "https://homebite-gepq.onrender.com"; 
 
         let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
-        
-        // LOGIN CHECK FIX: Checking both 'user' and 'userData' to be safe
         const loggedInUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userData'));
+        
+        // Variable to hold the final selected address string
+        let selectedDeliveryAddress = ""; 
 
+        // 1. FETCH & DISPLAY ADDRESSES
+        async function fetchSavedAddresses() {
+            if (!loggedInUser || !loggedInUser.id) return;
+            
+            const container = document.getElementById('addressListContainer');
+            try {
+                const res = await fetch(`${API_URL}/api/addresses/${loggedInUser.id}`);
+                const data = await res.json();
+
+                if (data.success && data.addresses.length > 0) {
+                    container.innerHTML = ''; // Clear loading
+                    
+                    data.addresses.forEach((addr, index) => {
+                        const landmarkInfo = addr.landmark ? ` (Near: ${addr.landmark})` : '';
+                        const fullAddrString = `${addr.full_address}${landmarkInfo}, PIN: ${addr.pincode}`;
+                        
+                        // Select the first address by default
+                        let selectedClass = index === 0 ? 'selected' : '';
+                        if (index === 0) selectedDeliveryAddress = fullAddrString;
+
+                        const card = `
+                            <div class="address-card ${selectedClass}" onclick="selectAddress(this, '${fullAddrString}')">
+                                <div class="addr-pin">PIN: ${addr.pincode}</div>
+                                <div class="addr-text">${addr.full_address}</div>
+                                <div class="addr-landmark">${landmarkInfo}</div>
+                            </div>
+                        `;
+                        container.innerHTML += card;
+                    });
+                } else {
+                    container.innerHTML = `<p style="color: #d93025; font-weight:600;">No saved address found. Please add one first.</p>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<p style="color: red;">Failed to load addresses.</p>`;
+            }
+        }
+
+        // 2. HIGHLIGHT SELECTED ADDRESS
+        function selectAddress(element, addressString) {
+            // Remove 'selected' class from all cards
+            const allCards = document.querySelectorAll('.address-card');
+            allCards.forEach(card => card.classList.remove('selected'));
+            
+            // Add 'selected' to clicked card
+            element.classList.add('selected');
+            
+            // Update global variable
+            selectedDeliveryAddress = addressString;
+        }
+
+        // 3. RENDER CART ITEMS
         function updateCartUI() {
             const container = document.getElementById('cartItemsContainer');
             const checkoutBox = document.getElementById('checkoutSection');
@@ -155,11 +220,11 @@
 
             checkoutBox.style.display = 'block';
             addressBox.style.display = 'block';
-            let totalAmount = 0;
+            fetchSavedAddresses(); // Fetch addresses if cart is not empty
             
-            // Checking how many unique chefs are in the cart to calculate delivery fee
+            let totalAmount = 0;
             const uniqueChefs = [...new Set(cart.map(item => item.chefId))];
-            const deliveryFee = uniqueChefs.length * 20; // 20rs per kitchen
+            const deliveryFee = uniqueChefs.length * 20;
 
             cart.forEach((item, index) => {
                 const itemTotal = item.basePrice * item.quantity;
@@ -182,7 +247,6 @@
                 `;
             });
 
-            // Update Billing
             document.getElementById('itemTotal').innerText = `₹${totalAmount}`;
             document.getElementById('deliveryFee').innerText = `₹${deliveryFee}`;
             const grandTotal = totalAmount + deliveryFee;
@@ -200,6 +264,7 @@
             updateCartUI();
         }
 
+        // 4. PROCESS CHECKOUT (Submitting data to server)
         async function processCheckout() {
             if (!loggedInUser || !loggedInUser.id) {
                 alert("Please login first to place an order!");
@@ -207,30 +272,27 @@
                 return;
             }
 
-            const address = document.getElementById('fullAddress').value.trim();
-            const pincode = document.getElementById('pincode').value.trim();
-            const landmark = document.getElementById('landmark').value.trim();
-
-            if (!address || !pincode) {
-                alert("⚠️ Please enter your full delivery address and pincode!");
+            if (!selectedDeliveryAddress || selectedDeliveryAddress.trim() === "") {
+                alert("⚠️ Please select a delivery address from the list, or add a new one!");
                 return;
             }
 
             const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
             const payBtn = document.getElementById('payBtn');
 
-            // Payload format updated for multi-kitchen logic
+            // NEW MULTI-KITCHEN ORDER LOGIC: We send the whole cart. 
+            // Our backend (`/api/orders`) will split this into separate orders for each cook.
             const orderPayload = {
                 userId: loggedInUser.id,
-                items: cart, // Pure cart array bhej rahe hain, backend ise split karega
+                items: cart, // the full cart array
                 grandTotal: window.currentGrandTotal,
                 paymentMethod: paymentMethod,
-                addressDetails: { full_address: address, pincode: pincode, landmark: landmark }
+                deliveryAddress: selectedDeliveryAddress // sending the properly formatted string
             };
 
             if(paymentMethod === 'Online') {
                 alert("Cashfree Gateway Integration will open here.");
-                // For now, redirecting to fake success
+                // Passing to fake success for now until cashfree is connected
                 placeOrderAPI(orderPayload, payBtn);
             } else {
                 placeOrderAPI(orderPayload, payBtn);
@@ -251,9 +313,9 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert("🎉 Order Placed Successfully! Sent to respective Kitchens.");
+                    alert("🎉 Order Placed Successfully! It has been sent to the Kitchen(s).");
                     localStorage.removeItem('homeBiteCart');
-                    window.location.href = "profile.html"; 
+                    window.location.href = "orderhistory.html"; 
                 } else {
                     alert("❌ Order Failed! " + result.message);
                     payBtn.innerText = "📦 Place Order";
