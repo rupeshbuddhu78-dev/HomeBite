@@ -138,7 +138,40 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 });
 
 // ==========================================
-// 3. DELETE FOOD ITEM API
+// 🔥 3. GET ALL FOOD ITEMS API (YAHAN NAYI API ADD KI GAYI HAI)
+// ==========================================
+app.get('/api/food-items', async (req, res) => {
+    try {
+        // Hum food_items ke saath cooks table se kitchen_name bhi manga rahe hain
+        const { data, error } = await supabase
+            .from('food_items')
+            .select(`
+                *,
+                cooks ( name, kitchen_name )
+            `);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        // Data ko thoda format kar dete hain website ke liye aasan banane ko
+        const formattedData = data.map(item => ({
+            id: item.id,
+            cook_id: item.cook_id,
+            name: item.name,
+            price: item.price,
+            type: item.type,
+            image_url: item.image_url,
+            // Agar cook ka naam mila toh theek, warna 'Verified Chef' dikha do
+            cook_name: item.cooks ? (item.cooks.kitchen_name || item.cooks.name) : "Verified Chef"
+        }));
+
+        return res.status(200).json({ success: true, items: formattedData });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 4. DELETE FOOD ITEM API
 // ==========================================
 app.delete('/api/food-items/:id', async (req, res) => {
     const { id } = req.params;
@@ -152,7 +185,7 @@ app.delete('/api/food-items/:id', async (req, res) => {
 });
 
 // ==========================================
-// 4. CUSTOMER LOGIN API (Full Profile Data Fetch)
+// 5. CUSTOMER LOGIN API (Full Profile Data Fetch)
 // ==========================================
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
@@ -185,7 +218,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 5. UPDATE PROFILE API (FOR CUSTOMERS)
+// 6. UPDATE PROFILE API (FOR CUSTOMERS)
 // ==========================================
 app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { userId, fullname, phone, address } = req.body;
@@ -220,7 +253,7 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 });
 
 // ==========================================
-// 6. CHANGE PASSWORD API
+// 7. CHANGE PASSWORD API
 // ==========================================
 app.post('/api/change-password', async (req, res) => {
     const { userId, password } = req.body;
@@ -241,7 +274,7 @@ app.post('/api/change-password', async (req, res) => {
 });
 
 // ==========================================
-// 7. PLACE NEW ORDER API (Live Food Checkout)
+// 8. PLACE NEW ORDER API (Live Food Checkout)
 // ==========================================
 app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod } = req.body;
@@ -290,7 +323,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// 8. GET ORDER HISTORY API (For Customers)
+// 9. GET ORDER HISTORY API (For Customers)
 // ==========================================
 app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -315,7 +348,7 @@ app.get('/api/orders/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 9. UPDATE ORDER STATUS API (For Cooks Dashboard)
+// 10. UPDATE ORDER STATUS API (For Cooks Dashboard)
 // ==========================================
 app.put('/api/orders/status/:orderId', async (req, res) => {
     const { orderId } = req.params;
@@ -336,7 +369,7 @@ app.put('/api/orders/status/:orderId', async (req, res) => {
 });
 
 // ==========================================
-// 10. GET ALL COOKS/KITCHENS API (For Customer Home Page)
+// 11. GET ALL COOKS/KITCHENS API (For Customer Home Page)
 // ==========================================
 app.get('/api/cooks', async (req, res) => {
     try {
@@ -353,7 +386,7 @@ app.get('/api/cooks', async (req, res) => {
 });
 
 // ==========================================
-// 11. HOUSEWIFE (COOK) REGISTRATION API
+// 12. HOUSEWIFE (COOK) REGISTRATION API
 // ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
@@ -386,7 +419,7 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
 });
 
 // ==========================================
-// 12. HOUSEWIFE (COOK) LOGIN API
+// 13. HOUSEWIFE (COOK) LOGIN API
 // ==========================================
 app.post('/api/cook/login', async (req, res) => {
     const { phone, password } = req.body;
@@ -410,7 +443,7 @@ app.post('/api/cook/login', async (req, res) => {
 });
 
 // ==========================================
-// 13. UPDATE CHEF PROFILE API (For Cooks Settings)
+// 14. UPDATE CHEF PROFILE API (For Cooks Settings)
 // ==========================================
 app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { cook_id, name, email, kitchen_name, phone, pan_card, address, latitude, longitude } = req.body;
@@ -458,7 +491,7 @@ app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, r
 });
 
 // ==========================================
-// 14. KITCHEN ON/OFF STATUS SWITCH (Toggle Open Status)
+// 15. KITCHEN ON/OFF STATUS SWITCH (Toggle Open Status)
 // ==========================================
 app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -481,7 +514,7 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 15. FETCH COOK'S EXCLUSIVE MENU ITEMS API
+// 16. FETCH COOK'S EXCLUSIVE MENU ITEMS API
 // ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -501,7 +534,7 @@ app.get('/api/cook/menu/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 16. GET ORDERS RECEIVED BY SPECIFIC COOK API
+// 17. GET ORDERS RECEIVED BY SPECIFIC COOK API
 // ==========================================
 app.get('/api/cook/orders/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -526,7 +559,7 @@ app.get('/api/cook/orders/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 17. GET COOK PROFILE DETAILS API (For Dashboard View)
+// 18. GET COOK PROFILE DETAILS API (For Dashboard View)
 // ==========================================
 app.get('/api/cook/profile/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -546,7 +579,7 @@ app.get('/api/cook/profile/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 18. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT - Monthly Tiffin Plan)
+// 19. CREATE OR UPDATE WEEKLY ROUTINE (UPSERT - Monthly Tiffin Plan)
 // ==========================================
 app.post('/api/cook/routine', async (req, res) => {
     const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
@@ -574,7 +607,7 @@ app.post('/api/cook/routine', async (req, res) => {
 });
 
 // ==========================================
-// 19. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK API
+// 20. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK API
 // ==========================================
 app.get('/api/cook/routine/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -598,7 +631,7 @@ app.get('/api/cook/routine/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 20. WILDCARD ROUTINE (SPA Fallback - Serve Frontend Client)
+// 21. WILDCARD ROUTINE (SPA Fallback - Serve Frontend Client)
 // ==========================================
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
