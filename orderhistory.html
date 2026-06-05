@@ -48,6 +48,7 @@
         .order-date { font-size: 0.85rem; color: #777; font-weight: 500; margin-top: 4px; }
         .order-amount { font-size: 1.2rem; font-weight: 800; color: var(--primary); text-align: right; }
         .item-count { font-size: 0.85rem; color: #777; font-weight: 500; }
+        .kitchen-name { font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-top: 4px; }
 
         /* Order Items */
         .order-items { margin-bottom: 25px; }
@@ -96,7 +97,6 @@
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar">
         <a href="index.html" class="logo">Home<span>Bite</span></a>
         <ul class="nav-links">
@@ -105,135 +105,160 @@
         </ul>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <div class="page-container">
         
         <a href="profile.html" class="back-btn">← Back to Profile</a>
 
         <div class="page-header">
             <h1>📦 My Orders</h1>
-            <select class="filter-select">
+            <select class="filter-select" id="orderFilter" onchange="filterOrders()">
                 <option value="all">All Orders</option>
                 <option value="active">Active Tracking</option>
                 <option value="delivered">Delivered</option>
             </select>
         </div>
 
-        <div id="ordersContainer">
-            <!-- Orders will be injected here via JavaScript -->
+        <div id="loadingMessage" style="text-align: center; color: var(--primary); font-weight: bold; font-size: 1.2rem; margin-top: 50px;">
+            Loading your delicious history... 🍕
         </div>
+
+        <div id="ordersContainer" style="display: none;">
+            </div>
 
     </div>
 
     <script>
-        // Mock Data for Orders
-        // Status keys: 1 = Placed, 2 = Preparing, 3 = On the Way, 4 = Delivered
-        const myOrders = [
-            {
-                id: "HB-9841",
-                date: "Today, 1:15 PM",
-                amount: "₹240",
-                itemCount: "2 Items",
-                items: [
-                    { name: "1x Premium Rajma Chawal Combo", price: "₹150" },
-                    { name: "1x Extra Roti (2 pcs)", price: "₹90" }
-                ],
-                status: 3, // On the way
-                isDelivered: false
-            },
-            {
-                id: "HB-9720",
-                date: "Yesterday, 8:30 PM",
-                amount: "₹180",
-                itemCount: "1 Item",
-                items: [
-                    { name: "1x Chicken Dum Biryani (Hostel Pack)", price: "₹180" }
-                ],
-                status: 4, // Delivered
-                isDelivered: true
-            },
-            {
-                id: "HB-9511",
-                date: "02 June 2026, 2:00 PM",
-                amount: "₹350",
-                itemCount: "3 Items",
-                items: [
-                    { name: "1x Paneer Butter Masala", price: "₹200" },
-                    { name: "4x Tawa Roti", price: "₹80" },
-                    { name: "1x Sweet Lassi", price: "₹70" }
-                ],
-                status: 4, // Delivered
-                isDelivered: true
-            }
-        ];
+        // Global array to store fetched orders
+        let fetchedOrders = [];
 
-        function renderOrders() {
+        // 1. Fetch Orders from Backend
+        async function fetchOrders() {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                alert("Please login to view your orders.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            const userId = user.id;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/orders/${userId}`);
+                const data = await response.json();
+
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('ordersContainer').style.display = 'block';
+
+                if (data.success) {
+                    fetchedOrders = data.orders;
+                    renderOrders(fetchedOrders);
+                } else {
+                    document.getElementById('ordersContainer').innerHTML = `<p style="text-align:center; color:red;">Error: ${data.message}</p>`;
+                }
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('ordersContainer').innerHTML = '<p style="text-align:center; color:red;">Failed to connect to the server.</p>';
+            }
+        }
+
+        // 2. Render Orders to HTML
+        function renderOrders(ordersToRender) {
             const container = document.getElementById('ordersContainer');
             container.innerHTML = '';
 
-            myOrders.forEach(order => {
-                // Calculate Timeline Progress Bar Width (Desktop)
-                let progressWidth = '0%';
-                if(order.status === 2) progressWidth = '33%';
-                if(order.status === 3) progressWidth = '66%';
-                if(order.status === 4) progressWidth = '100%';
+            if (ordersToRender.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#777; font-size: 1.1rem; padding: 40px;">No orders found here yet! 🍽️</p>';
+                return;
+            }
 
-                // Items HTML
+            ordersToRender.forEach(order => {
+                // Determine Status Level (1 to 4)
+                let statusLevel = 1; 
+                const dbStatus = order.status.toLowerCase();
+                
+                if (dbStatus.includes('prepar') || dbStatus.includes('accept')) statusLevel = 2;
+                if (dbStatus.includes('way') || dbStatus.includes('dispatch') || dbStatus.includes('out')) statusLevel = 3;
+                if (dbStatus.includes('deliver')) statusLevel = 4;
+
+                const isDelivered = statusLevel === 4;
+
+                // Calculate Timeline Progress Bar Width (Desktop vs Mobile)
+                let progressWidth = '0%';
+                if(statusLevel === 2) progressWidth = '33%';
+                if(statusLevel === 3) progressWidth = '66%';
+                if(statusLevel === 4) progressWidth = '100%';
+
+                // Map Order Items
                 let itemsHTML = '';
-                order.items.forEach(item => {
-                    itemsHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price}</span></div>`;
+                let totalItemsCount = 0;
+
+                order.order_items.forEach(item => {
+                    const itemName = item.food_items ? item.food_items.name : "Unknown Item";
+                    const itemTotalPrice = item.price * item.quantity;
+                    totalItemsCount += item.quantity;
+                    itemsHTML += `<div class="item-row"><span>${item.quantity}x ${itemName}</span><span>₹${itemTotalPrice}</span></div>`;
                 });
+
+                // Format Date
+                const dateObj = new Date(order.created_at);
+                const formattedDate = dateObj.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                // Shorten UUID for Display
+                const shortId = "HB-" + order.id.substring(0, 6).toUpperCase();
+
+                // Kitchen Details
+                const kitchenName = order.cooks && order.cooks.kitchen_name ? order.cooks.kitchen_name : "HomeBite Chef";
+                const cookPhone = order.cooks && order.cooks.phone ? order.cooks.phone : "";
 
                 // Generate Card
                 const cardHTML = `
                     <div class="order-card">
-                        <!-- Card Header -->
                         <div class="card-header">
                             <div>
-                                <div class="order-id">#${order.id}</div>
-                                <div class="order-date">${order.date}</div>
+                                <div class="order-id">#${shortId}</div>
+                                <div class="kitchen-name">👨‍🍳 ${kitchenName}</div>
+                                <div class="order-date">${formattedDate}</div>
                             </div>
                             <div>
-                                <div class="order-amount">${order.amount}</div>
-                                <div class="item-count">${order.itemCount}</div>
+                                <div class="order-amount">₹${order.total_amount}</div>
+                                <div class="item-count">${totalItemsCount} ${totalItemsCount > 1 ? 'Items' : 'Item'}</div>
                             </div>
                         </div>
 
-                        <!-- Order Items -->
                         <div class="order-items">
                             ${itemsHTML}
                         </div>
 
-                        <!-- Live Tracking Timeline -->
                         <div class="tracking-container">
                             <div class="timeline">
                                 <div class="timeline-progress" style="width: ${window.innerWidth > 600 ? progressWidth : '4px'}; height: ${window.innerWidth <= 600 ? progressWidth : '4px'};"></div>
                                 
-                                <div class="step ${order.status >= 1 ? 'active' : ''}">
+                                <div class="step ${statusLevel >= 1 ? 'active' : ''}">
                                     <div class="step-icon">📝</div>
                                     <div class="step-label">Order Placed</div>
                                 </div>
-                                <div class="step ${order.status >= 2 ? 'active' : ''}">
+                                <div class="step ${statusLevel >= 2 ? 'active' : ''}">
                                     <div class="step-icon">👨‍🍳</div>
                                     <div class="step-label">Preparing</div>
                                 </div>
-                                <div class="step ${order.status >= 3 ? 'active' : ''}">
+                                <div class="step ${statusLevel >= 3 ? 'active' : ''}">
                                     <div class="step-icon">🛵</div>
                                     <div class="step-label">On the Way</div>
                                 </div>
-                                <div class="step ${order.status >= 4 ? 'active' : ''}">
+                                <div class="step ${statusLevel >= 4 ? 'active' : ''}">
                                     <div class="step-icon">✅</div>
                                     <div class="step-label">Delivered</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
                         <div class="card-actions">
-                            <button class="btn btn-outline" onclick="alert('Connecting to help center for Order #${order.id}')">Need Help?</button>
-                            ${order.isDelivered 
-                                ? `<button class="btn btn-primary" onclick="alert('Adding items from #${order.id} to cart!')">↻ Reorder</button>` 
-                                : `<button class="btn btn-primary" style="background: #25D366;" onclick="alert('Calling Delivery Boy...')">📞 Call Rider</button>`
+                            <button class="btn btn-outline" onclick="alert('Connecting to help center for Order #${shortId}')">Need Help?</button>
+                            ${isDelivered 
+                                ? `<button class="btn btn-primary" onclick="alert('This feature will be available soon!')">↻ Reorder</button>` 
+                                : `<button class="btn btn-primary" style="background: #25D366;" onclick="window.location.href='tel:${cookPhone}'">📞 Call Kitchen</button>`
                             }
                         </div>
                     </div>
@@ -242,11 +267,29 @@
             });
         }
 
+        // 3. Filter Logic
+        function filterOrders() {
+            const filterValue = document.getElementById('orderFilter').value;
+            let filtered = [];
+
+            if (filterValue === 'all') {
+                filtered = fetchedOrders;
+            } else if (filterValue === 'active') {
+                // Filter orders that are not delivered yet
+                filtered = fetchedOrders.filter(o => !o.status.toLowerCase().includes('deliver'));
+            } else if (filterValue === 'delivered') {
+                // Filter delivered orders
+                filtered = fetchedOrders.filter(o => o.status.toLowerCase().includes('deliver'));
+            }
+
+            renderOrders(filtered);
+        }
+
         // Handle Responsive Timeline Progress on window resize
-        window.addEventListener('resize', renderOrders);
+        window.addEventListener('resize', () => filterOrders()); // Re-render based on current filter to adjust timeline heights
         
-        // Initial Render
-        window.onload = renderOrders;
+        // Fetch when page loads
+        window.onload = fetchOrders;
 
     </script>
 </body>
