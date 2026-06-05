@@ -20,7 +20,7 @@
             --border: #eaeaea;
         }
 
-        /* === PREMIUM NAVBAR (SYNCED WITH INDEX) === */
+        /* === PREMIUM NAVBAR === */
         .navbar {
             display: flex; justify-content: space-between; align-items: center;
             padding: 15px 5%; background: rgba(255, 255, 255, 0.95);
@@ -75,8 +75,11 @@
         
         .chef-info-text { flex: 1; }
         .chef-info-text h3 { font-size: 1.4rem; color: var(--dark); line-height: 1.2; margin-bottom: 6px; font-weight: 700; }
-        .wa-group { color: var(--whatsapp); font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 4px; }
+        .wa-group { color: var(--primary); font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 4px; }
         .students-count { font-size: 0.85rem; color: #777; display: flex; align-items: center; gap: 5px; }
+        .status-badge { font-size: 0.85rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; display: inline-block; margin-top: 5px;}
+        .status-open { background: #e6f9ed; color: #15803d; }
+        .status-closed { background: #fee2e2; color: #b91c1c; }
 
         .view-btn { width: 100%; padding: 14px; border-radius: 12px; background: #fdf5ef; color: var(--primary); font-weight: 700; text-align: center; border: 1px solid #ffe1cd; cursor: pointer; transition: 0.3s; margin-top: auto; font-size: 1rem; }
         .chef-card:hover .view-btn { background: var(--primary); color: white; border-color: var(--primary); }
@@ -133,7 +136,7 @@
 
     <header class="page-header">
         <h1>Explore Home-Chefs</h1>
-        <p>Browse through our verified local housewives. View their complete weekly routine, today's menu, and join their WhatsApp community.</p>
+        <p>Browse through our verified local kitchens. View their complete weekly routine, check live availability, and order delicious homemade meals.</p>
     </header>
 
     <div class="chef-grid" id="chefGrid">
@@ -172,6 +175,9 @@
     </footer>
 
     <script>
+        // BACKEND BASE URL CONFIGURATION
+        const API_BASE_URL = 'http://localhost:5000'; // Agar live upload ho to server domain URL yahan likhein
+
         // Update cart count on load
         function updateCartCount() {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -179,73 +185,81 @@
             document.getElementById('navCartCount').innerText = count;
         }
 
-        // MOCK DATABASE
-        const chefsDB = [
-            { id: 1, name: "Aarti Sharma", group: "Aarti Veg Kitchen", students: 142, img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" },
-            { id: 2, name: "Sunita Verma", group: "Sunita Healthy Tiffin", students: 85, img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80" },
-            { id: 3, name: "Priya Singh", group: "Priya Homestyle Food", students: 110, img: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=150&q=80" },
-            { id: 4, name: "Meena Devi", group: "Meena Aunty Rasoi", students: 60, img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=150&q=80" },
-            { id: 5, name: "Anjali Gupta", group: "Anjali Fresh Bites", students: 95, img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&q=80" },
-            { id: 6, name: "Kavita Yadav", group: "Kavita Premium Tiffin", students: 130, img: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=150&q=80" },
-            { id: 7, name: "Rekha Jha", group: "Rekha Mithila Food", students: 48, img: "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?auto=format&fit=crop&w=150&q=80" },
-            { id: 8, name: "Neelam Pandey", group: "Neelam Pure Veg", students: 75, img: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=150&q=80" },
-            { id: 9, name: "Pooja Mishra", group: "Pooja Dabba Service", students: 42, img: "https://images.unsplash.com/photo-1619895862022-09114b41f16f?auto=format&fit=crop&w=150&q=80" },
-            { id: 10, name: "Sushma Kumari", group: "Sushma Diet Kitchen", students: 58, img: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=150&q=80" }
-        ];
-
-        // Render Cards with Staggered Animation
-        function renderCards() {
+        // FETCH REAL DATA FROM DATABASE AND RENDER DYNAMIC CARDS
+        async function fetchAndRenderCards() {
             const grid = document.getElementById('chefGrid');
-            grid.innerHTML = ''; 
+            grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; color: #777; font-size:1.2rem; padding: 40px 0;">Loading verified home-chefs...</div>';
 
-            chefsDB.forEach((chef, index) => {
-                // Add staggered animation delay so they load one by one beautifully
-                const delay = index * 0.1; 
-                
-                const cardHTML = `
-                    <div class="chef-card" style="animation-delay: ${delay}s;" onclick="window.location.href='routine.html?id=${chef.id}'">
-                        <div class="chef-profile">
-                            <img src="${chef.img}" alt="${chef.name}">
-                            <div class="chef-info-text">
-                                <h3>${chef.name}</h3>
-                                <div class="wa-group">💬 ${chef.group}</div>
-                                <div class="students-count">🔥 ${chef.students} students joined</div>
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cooks`);
+                const result = await response.json();
+
+                if (!result.success || !result.kitchens || result.kitchens.length === 0) {
+                    grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; color: #777; font-size:1.2rem; padding: 40px 0;">No active home-chefs found in the database.</div>';
+                    return;
+                }
+
+                // Clear layout container
+                grid.innerHTML = '';
+
+                // Generate dynamic elements matching backend attributes
+                result.kitchens.forEach((chef, index) => {
+                    const delay = index * 0.1; // Smooth staggered animation
+                    
+                    // Fallback profile pic agar database me blank/null ho
+                    const imgUrl = chef.profile_pic_url || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=150&q=80';
+                    
+                    // Live Status management
+                    const statusClass = chef.is_open ? 'status-open' : 'status-closed';
+                    const statusText = chef.is_open ? '● Available' : '○ Closed Currently';
+
+                    const cardHTML = `
+                        <div class="chef-card" style="animation-delay: ${delay}s;" onclick="window.location.href='routine.html?id=${chef.id}'">
+                            <div class="chef-profile">
+                                <img src="${imgUrl}" alt="${chef.name}">
+                                <div class="chef-info-text">
+                                    <h3>${chef.name || 'Verified Chef'}</h3>
+                                    <div class="wa-group">🍳 ${chef.kitchen_name || 'Home Kitchen'}</div>
+                                    <div class="students-count">📍 ${chef.address || 'Patna, Bihar'}</div>
+                                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                                        <div class="students-count">⭐ ${chef.rating || '4.5'}</div>
+                                        <span class="status-badge ${statusClass}">${statusText}</span>
+                                    </div>
+                                </div>
                             </div>
+                            <button class="view-btn">View Menu & Routine ➔</button>
                         </div>
-                        <button class="view-btn">View Menu & Routine ➔</button>
-                    </div>
-                `;
-                grid.innerHTML += cardHTML;
-            });
+                    `;
+                    grid.innerHTML += cardHTML;
+                });
+
+            } catch (error) {
+                console.error("Database connection error:", error);
+                grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; color: var(--secondary); font-size:1.1rem; padding: 40px 0; font-weight:600;">⚠️ Unable to connect to database server. Please check if backend server is running!</div>';
+            }
         }
 
         // Initial Load
         window.onload = () => {
             updateCartCount();
-            renderCards();
+            fetchAndRenderCards();
         };
 
-        // ==========================================
-        // FIX: MOBILE NAVBAR CLOSE LOGIC
-        // ==========================================
+        // === MOBILE NAVBAR TOGGLE LOGIC ===
         const navLinks = document.getElementById('navLinks');
         const menuToggle = document.getElementById('menuToggle');
 
-        // 1. Open/Close menu when clicking the hamburger icon
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
         });
 
-        // 2. Close menu when clicking ANY link inside the navbar
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
             });
         });
 
-        // 3. Close menu when clicking ANYWHERE outside the navbar
         document.addEventListener('click', (event) => {
-            // Check if menu is active, and if the click was outside the menu AND the toggle button
             if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
                 navLinks.classList.remove('active');
             }
