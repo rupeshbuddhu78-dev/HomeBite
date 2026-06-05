@@ -5,6 +5,8 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const cloudinary = require('cloudinary').v2; // Cloudinary SDK
 const multer = require('multer');             // File upload handler
+const Razorpay = require('razorpay');         // 🔥 Razorpay SDK
+const crypto = require('crypto');             // 🔥 Crypto for Signature Verification
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -64,6 +66,14 @@ async function testConnection() {
     }
 }
 testConnection();
+
+// ==========================================
+// 🔥 RAZORPAY SETUP
+// ==========================================
+const razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sy6ktKhuu6mh4x',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'HvC97w46YWwUH3JvxjzjBFdW'
+});
 
 // ==========================================
 // 1. CUSTOMER SIGNUP API 
@@ -321,7 +331,6 @@ app.delete('/api/addresses/:id', async (req, res) => {
     }
 });
 
-
 // ==========================================
 // 8. CHANGE PASSWORD API
 // ==========================================
@@ -390,10 +399,94 @@ app.get('/api/leave/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 🔥 11. PLACE NEW ORDER API (FIXED PRICE MAPPING)
+// 🔥 11. RAZORPAY - CREATE ORDER API
+// ==========================================
+app.post('/api/create-razorpay-order', async (req, res) => {
+    const { amount } = req.body; 
+
+    if (!amount || amount < 1) {
+        return res.status(400).json({ success: false, message: "Invalid amount." });
+    }
+
+    try {
+        const options = {
+            amount: amount * 100, // paise mein convert kiya
+            currency: 'INR',
+            receipt: `rcpt_${Date.now()}`
+        };
+
+        const order = await razorpayInstance.orders.create(options);
+        return res.status(200).json({ success: true, order });
+    } catch (error) {
+        console.error("Razorpay Create Order Error:", error);
+        return res.status(500).json({ success: false, message: "Could not create Razorpay order." });
+    }
+});
+
+// ==========================================
+// 🔥 12. RAZORPAY - VERIFY PAYMENT & SAVE ORDER
+// ==========================================
+app.post('/api/verify-payment', async (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderDetails } = req.body;
+
+    try {
+        // 1. Signature Verify karna
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSign = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || 'HvC97w46YWwUH3JvxjzjBFdW')
+            .update(sign.toString())
+            .digest("hex");
+
+        if (razorpay_signature !== expectedSign) {
+            return res.status(400).json({ success: false, message: "Payment verification failed. Signature mismatch." });
+        }
+
+        // 2. Payment pakka ho gaya, ab database mein save karo
+        const { userId, cookId, items, grandTotal, deliveryAddress } = orderDetails;
+
+        const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .insert([{
+                user_id: userId,
+                cook_id: cookId, 
+                total_amount: grandTotal,
+                status: 'Pending',
+                payment_status: 'Paid', // 🟢 Marked Paid
+                delivery_address: deliveryAddress 
+            }])
+            .select()
+            .single();
+
+        if (orderError) throw new Error(orderError.message);
+
+        const orderId = orderData.id;
+
+        const orderItemsArray = items.map(item => ({
+            order_id: orderId,
+            food_id: item.id,            
+            quantity: item.quantity,
+            price: item.basePrice        
+        }));
+
+        const { error: itemsError } = await supabase.from('order_items').insert(orderItemsArray);
+        if (itemsError) throw new Error(itemsError.message);
+
+        return res.status(200).json({ success: true, message: "Payment Verified & Order Placed Successfully!", orderId: orderId });
+    } catch (err) {
+        console.error("Verify Error:", err);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================
+// 🔥 13. PLACE NEW ORDER API (COD ONLY)
 // ==========================================
 app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod, deliveryAddress } = req.body;
+
+    if (paymentMethod === 'Online') {
+        return res.status(400).json({ success: false, message: "Please use online checkout for online payments." });
+    }
 
     try {
         const { data: orderData, error: orderError } = await supabase
@@ -403,7 +496,7 @@ app.post('/api/orders', async (req, res) => {
                 cook_id: cookId, 
                 total_amount: grandTotal,
                 status: 'Pending',
-                payment_status: paymentMethod === 'Online' ? 'Paid' : 'Unpaid',
+                payment_status: 'Unpaid', // 🔴 COD is Unpaid
                 delivery_address: deliveryAddress 
             }])
             .select()
@@ -413,16 +506,14 @@ app.post('/api/orders', async (req, res) => {
 
         const orderId = orderData.id;
 
-        // FIXED MAPPING HERE
         const orderItemsArray = items.map(item => ({
             order_id: orderId,
-            food_id: item.id,            // FIXED: Used item.id instead of item.foodId
+            food_id: item.id,            
             quantity: item.quantity,
-            price: item.basePrice        // FIXED: Used item.basePrice instead of item.price
+            price: item.basePrice        
         }));
 
         const { error: itemsError } = await supabase.from('order_items').insert(orderItemsArray);
-
         if (itemsError) return res.status(400).json({ success: false, message: itemsError.message });
 
         return res.status(201).json({ success: true, message: "Order Placed Successfully!", orderId: orderId });
@@ -432,7 +523,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// 12. GET ORDER HISTORY API
+// 14. GET ORDER HISTORY API
 // ==========================================
 app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -457,7 +548,7 @@ app.get('/api/orders/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 13. UPDATE ORDER STATUS API (Cooks)
+// 15. UPDATE ORDER STATUS API (Cooks)
 // ==========================================
 app.put('/api/orders/status/:orderId', async (req, res) => {
     const { orderId } = req.params;
@@ -478,7 +569,7 @@ app.put('/api/orders/status/:orderId', async (req, res) => {
 });
 
 // ==========================================
-// 14. GET ALL COOKS/KITCHENS API
+// 16. GET ALL COOKS/KITCHENS API
 // ==========================================
 app.get('/api/cooks', async (req, res) => {
     try {
@@ -495,7 +586,7 @@ app.get('/api/cooks', async (req, res) => {
 });
 
 // ==========================================
-// 15. HOUSEWIFE (COOK) REGISTRATION API 
+// 17. HOUSEWIFE (COOK) REGISTRATION API 
 // ==========================================
 app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
     const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
@@ -534,7 +625,7 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
 });
 
 // ==========================================
-// 16. HOUSEWIFE (COOK) LOGIN API
+// 18. HOUSEWIFE (COOK) LOGIN API
 // ==========================================
 app.post('/api/cook/login', async (req, res) => {
     const { phone, password } = req.body;
@@ -558,7 +649,7 @@ app.post('/api/cook/login', async (req, res) => {
 });
 
 // ==========================================
-// 17. UPDATE CHEF PROFILE API
+// 19. UPDATE CHEF PROFILE API
 // ==========================================
 app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { cook_id, name, email, kitchen_name, phone, pan_card, address, latitude, longitude } = req.body;
@@ -602,7 +693,7 @@ app.post('/api/cook/update-profile', upload.single('profile_pic'), async (req, r
 });
 
 // ==========================================
-// 18. KITCHEN ON/OFF STATUS SWITCH
+// 20. KITCHEN ON/OFF STATUS SWITCH
 // ==========================================
 app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -625,7 +716,7 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 19. FETCH COOK'S EXCLUSIVE MENU ITEMS API
+// 21. FETCH COOK'S EXCLUSIVE MENU ITEMS API
 // ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -645,7 +736,7 @@ app.get('/api/cook/menu/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 20. GET ORDERS RECEIVED BY SPECIFIC COOK API
+// 22. GET ORDERS RECEIVED BY SPECIFIC COOK API
 // ==========================================
 app.get('/api/cook/orders/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -670,7 +761,7 @@ app.get('/api/cook/orders/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 21. GET COOK PROFILE DETAILS API
+// 23. GET COOK PROFILE DETAILS API
 // ==========================================
 app.get('/api/cook/profile/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -690,7 +781,7 @@ app.get('/api/cook/profile/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 22. CREATE OR UPDATE WEEKLY ROUTINE
+// 24. CREATE OR UPDATE WEEKLY ROUTINE
 // ==========================================
 app.post('/api/cook/routine', async (req, res) => {
     const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
@@ -718,7 +809,7 @@ app.post('/api/cook/routine', async (req, res) => {
 });
 
 // ==========================================
-// 23. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK API
+// 25. FETCH WEEKLY ROUTINE FOR A SPECIFIC COOK API
 // ==========================================
 app.get('/api/cook/routine/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -742,7 +833,7 @@ app.get('/api/cook/routine/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 24. WILDCARD ROUTINE (SPA Fallback)
+// 26. WILDCARD ROUTINE (SPA Fallback)
 // ==========================================
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
