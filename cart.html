@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Cart - HomeBite</title>
+    <title>Your Cart & Checkout - HomeBite</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -20,12 +20,18 @@
         .back-btn:hover { color: var(--primary); }
 
         /* Cart Container */
-        .cart-container { max-width: 1000px; margin: 40px auto; padding: 0 5%; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
+        .cart-container { max-width: 1100px; margin: 40px auto; padding: 0 5%; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
         
-        /* Left: Cart Items */
-        .cart-items-section { flex: 2; min-width: 320px; }
-        .cart-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; color: var(--dark); }
+        /* Left: Cart Items & Address */
+        .left-section { flex: 2; min-width: 320px; }
+        .section-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; color: var(--dark); }
         
+        /* Address Box */
+        .address-box { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .address-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; font-family: inherit; }
+        .address-input:focus { outline: none; border-color: var(--primary); }
+        
+        /* Cart Items */
         .cart-item { background: white; padding: 15px; border-radius: 16px; display: flex; gap: 15px; align-items: center; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
         .cart-item img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; }
         .item-info { flex: 1; }
@@ -55,7 +61,6 @@
         .checkout-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .empty-cart { text-align: center; padding: 50px 20px; }
-        .empty-cart img { width: 150px; opacity: 0.5; margin-bottom: 20px; }
         .empty-cart h2 { color: var(--dark); margin-bottom: 10px; }
         .empty-cart a { display: inline-block; margin-top: 15px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: 600; }
 
@@ -74,10 +79,19 @@
 
     <div class="cart-container">
         
-        <div class="cart-items-section">
-            <h1 class="cart-title">Your Cart 🛒</h1>
-            <div id="cartItemsContainer">
+        <div class="left-section">
+            
+            <div id="addressSection" class="address-box" style="display: none;">
+                <h2 class="section-title">📍 Delivery Address</h2>
+                <textarea id="fullAddress" class="address-input" rows="3" placeholder="Enter your full hostel/PG address..."></textarea>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="landmark" class="address-input" placeholder="Nearby Landmark (Optional)">
+                    <input type="text" id="pincode" class="address-input" placeholder="Pincode" maxlength="6">
                 </div>
+            </div>
+
+            <h1 class="section-title">Your Cart 🛒</h1>
+            <div id="cartItemsContainer"></div>
         </div>
 
         <div class="checkout-section" id="checkoutSection" style="display: none;">
@@ -88,12 +102,8 @@
                 <span id="itemTotal">₹0</span>
             </div>
             <div class="bill-row">
-                <span>Delivery Partner Fee</span>
-                <span>₹20</span>
-            </div>
-            <div class="bill-row">
-                <span>Platform Fee</span>
-                <span>₹5</span>
+                <span>Delivery Fee (Multi-Kitchen)</span>
+                <span id="deliveryFee">₹20</span>
             </div>
             
             <div class="bill-total">
@@ -104,37 +114,39 @@
             <div class="payment-options">
                 <h4>Payment Method</h4>
                 <label class="pay-method">
-                    <input type="radio" name="payment" value="Online" checked> UPI / Card / NetBanking
+                    <input type="radio" name="payment" value="Online" checked> UPI / Card (Cashfree)
                 </label>
                 <label class="pay-method">
                     <input type="radio" name="payment" value="COD"> Cash on Delivery (COD)
                 </label>
             </div>
 
-            <button class="checkout-btn" id="payBtn" onclick="placeOrder()">📦 Place Order</button>
+            <button class="checkout-btn" id="payBtn" onclick="processCheckout()">📦 Place Order</button>
         </div>
 
     </div>
 
     <script>
-        // 🔴 CHANGE THIS TO YOUR ACTUAL RENDER BACKEND URL 🔴
         const API_URL = "https://homebite-gepq.onrender.com"; 
 
-        // Fetch cart from localStorage (live-menu.html me 'homeBiteCart' naam se save kiya tha)
         let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
+        
+        // LOGIN CHECK FIX: Checking both 'user' and 'userData' to be safe
+        const loggedInUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userData'));
 
         function updateCartUI() {
             const container = document.getElementById('cartItemsContainer');
             const checkoutBox = document.getElementById('checkoutSection');
+            const addressBox = document.getElementById('addressSection');
             
             container.innerHTML = '';
 
             if (cart.length === 0) {
                 checkoutBox.style.display = 'none';
+                addressBox.style.display = 'none';
                 container.innerHTML = `
                     <div class="empty-cart">
                         <h2>Your cart is empty 😕</h2>
-                        <p style="color: #777;">Looks like you haven't added any delicious food yet.</p>
                         <a href="live-menu.html">Browse Live Menu</a>
                     </div>
                 `;
@@ -142,7 +154,12 @@
             }
 
             checkoutBox.style.display = 'block';
+            addressBox.style.display = 'block';
             let totalAmount = 0;
+            
+            // Checking how many unique chefs are in the cart to calculate delivery fee
+            const uniqueChefs = [...new Set(cart.map(item => item.chefId))];
+            const deliveryFee = uniqueChefs.length * 20; // 20rs per kitchen
 
             cart.forEach((item, index) => {
                 const itemTotal = item.basePrice * item.quantity;
@@ -167,58 +184,60 @@
 
             // Update Billing
             document.getElementById('itemTotal').innerText = `₹${totalAmount}`;
-            const grandTotal = totalAmount + 20 + 5; // Adding delivery (20) & platform fee (5)
+            document.getElementById('deliveryFee').innerText = `₹${deliveryFee}`;
+            const grandTotal = totalAmount + deliveryFee;
             document.getElementById('grandTotal').innerText = `₹${grandTotal}`;
             
-            // Save grand total in window for easy access during placeOrder()
             window.currentGrandTotal = grandTotal;
         }
 
         function updateQty(index, change) {
             cart[index].quantity += change;
-            
             if (cart[index].quantity <= 0) {
-                cart.splice(index, 1); // Remove item if quantity goes to 0
+                cart.splice(index, 1);
             }
-            
             localStorage.setItem('homeBiteCart', JSON.stringify(cart));
             updateCartUI();
         }
 
-        async function placeOrder() {
-            // Check if user is logged in
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            if (!userData || !userData.id) {
+        async function processCheckout() {
+            if (!loggedInUser || !loggedInUser.id) {
                 alert("Please login first to place an order!");
                 window.location.href = "login.html";
                 return;
             }
 
-            // Default fallback if chefId is missing (e.g., if cart data is old)
-            // Realistically, items in cart should have same chefId if we group orders by chef,
-            // but for now, we take the chefId of the first item in the cart.
-            const cookId = cart[0].chefId; 
-            
-            if (!cookId) {
-                alert("Chef ID missing! Please clear your cart and add items again from the Live Menu.");
+            const address = document.getElementById('fullAddress').value.trim();
+            const pincode = document.getElementById('pincode').value.trim();
+            const landmark = document.getElementById('landmark').value.trim();
+
+            if (!address || !pincode) {
+                alert("⚠️ Please enter your full delivery address and pincode!");
                 return;
             }
 
             const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
             const payBtn = document.getElementById('payBtn');
 
+            // Payload format updated for multi-kitchen logic
             const orderPayload = {
-                userId: userData.id,
-                cookId: cookId,
-                items: cart.map(item => ({
-                    foodId: item.id,
-                    price: item.basePrice,
-                    quantity: item.quantity
-                })),
+                userId: loggedInUser.id,
+                items: cart, // Pure cart array bhej rahe hain, backend ise split karega
                 grandTotal: window.currentGrandTotal,
-                paymentMethod: paymentMethod
+                paymentMethod: paymentMethod,
+                addressDetails: { full_address: address, pincode: pincode, landmark: landmark }
             };
 
+            if(paymentMethod === 'Online') {
+                alert("Cashfree Gateway Integration will open here.");
+                // For now, redirecting to fake success
+                placeOrderAPI(orderPayload, payBtn);
+            } else {
+                placeOrderAPI(orderPayload, payBtn);
+            }
+        }
+
+        async function placeOrderAPI(orderPayload, payBtn) {
             try {
                 payBtn.innerText = "Processing Order...";
                 payBtn.disabled = true;
@@ -232,23 +251,21 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert("🎉 Order Placed Successfully! It has been sent to the Kitchen.");
-                    localStorage.removeItem('homeBiteCart'); // Clear Cart
-                    window.location.href = "profile.html"; // Redirect to User Profile/History
+                    alert("🎉 Order Placed Successfully! Sent to respective Kitchens.");
+                    localStorage.removeItem('homeBiteCart');
+                    window.location.href = "profile.html"; 
                 } else {
                     alert("❌ Order Failed! " + result.message);
                     payBtn.innerText = "📦 Place Order";
                     payBtn.disabled = false;
                 }
             } catch (error) {
-                console.error("Error placing order:", error);
                 alert("❌ Server Connection Error! Please try again.");
                 payBtn.innerText = "📦 Place Order";
                 payBtn.disabled = false;
             }
         }
 
-        // Initialize UI on page load
         window.onload = updateCartUI;
     </script>
 </body>
