@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); 
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' })); // Increased limit for Base64 if needed
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(__dirname));
 
 // ==========================================
@@ -126,7 +126,8 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
 
         const { data, error } = await supabase
             .from('food_items')
-            .insert([{ cook_id, name, price: parseInt(price), type, image_url: foodImageUrl }]);
+            .insert([{ cook_id, name, price: parseInt(price), type, image_url: foodImageUrl }])
+            .select();
 
         if (error) return res.status(400).json({ success: false, message: error.message });
 
@@ -170,7 +171,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 4. MISSING FIX: UPDATE PROFILE API
+// 4. UPDATE PROFILE API
 // ==========================================
 app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) => {
     const { userId, fullname, phone, address } = req.body;
@@ -181,13 +182,11 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
         if (phone) updateData.phone = phone;
         if (address) updateData.address = address;
 
-        // Agar user ne nayi photo upload ki hai
         if (req.file) {
             const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_users');
             updateData.profile_pic_url = cloudinaryResult.secure_url;
         }
 
-        // Database ko update karo
         const { error } = await supabase
             .from('users')
             .update(updateData)
@@ -198,7 +197,7 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
         return res.status(200).json({ 
             success: true, 
             message: "Profile updated successfully!",
-            profile_pic_url: updateData.profile_pic_url // Nayi photo ka URL frontend ko wapas bhej do
+            profile_pic_url: updateData.profile_pic_url
         });
 
     } catch (err) {
@@ -208,13 +207,12 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 });
 
 // ==========================================
-// 5. MISSING FIX: CHANGE PASSWORD API
+// 5. CHANGE PASSWORD API
 // ==========================================
 app.post('/api/change-password', async (req, res) => {
     const { userId, password } = req.body;
 
     try {
-        // Apni database table mein password update karo
         const { error } = await supabase
             .from('users')
             .update({ password: password })
@@ -229,7 +227,6 @@ app.post('/api/change-password', async (req, res) => {
     }
 });
 
-
 // ==========================================
 // 6. PLACE NEW ORDER API (Supabase)
 // ==========================================
@@ -237,12 +234,11 @@ app.post('/api/orders', async (req, res) => {
     const { userId, cookId, items, grandTotal, paymentMethod } = req.body;
 
     try {
-        // Step 1: `orders` table mein entry banayein
         const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert([{
                 user_id: userId,
-                cook_id: cookId, // NOTE: Yeh Supabase ka valid UUID hona chahiye
+                cook_id: cookId, 
                 total_amount: grandTotal,
                 status: 'Pending',
                 payment_status: paymentMethod === 'Online' ? 'Paid' : 'Unpaid'
@@ -257,10 +253,9 @@ app.post('/api/orders', async (req, res) => {
 
         const orderId = orderData.id;
 
-        // Step 2: `order_items` table mein cart ke items save karein
         const orderItemsArray = items.map(item => ({
             order_id: orderId,
-            food_id: item.foodId, // NOTE: Yeh bhi valid UUID hona chahiye
+            food_id: item.foodId, 
             quantity: item.quantity,
             price: item.price
         }));
@@ -289,7 +284,6 @@ app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
 
     try {
-        // user_id ke basis par orders nikalo
         const { data: orders, error } = await supabase
             .from('orders')
             .select(`
@@ -302,6 +296,114 @@ app.get('/api/orders/:userId', async (req, res) => {
         if (error) return res.status(400).json({ success: false, message: error.message });
 
         return res.status(200).json({ success: true, orders });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+-- ⚡ 👇 NAZAR YAHAN RAKHO: APP & HOUSEWIVES (COOKS) KE LIYE NAYI APIS 👇 ⚡ --
+
+// =========================================================================
+// 8. APP NEW FIX: HOUSEWIFE (COOK) REGISTRATION API (With Multer Image)
+// =========================================================================
+app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) => {
+    const { name, email, phone, password, kitchen_name, address, latitude, longitude, pan_card } = req.body;
+
+    try {
+        let profilePicUrl = null;
+        if (req.file) {
+            // Housewives images uploaded to 'homebite_cooks'
+            const cloudinaryResult = await uploadToCloudinary(req.file.buffer, 'homebite_cooks');
+            profilePicUrl = cloudinaryResult.secure_url;
+        }
+
+        const { data, error } = await supabase
+            .from('cooks')
+            .insert([{ 
+                name, 
+                email, 
+                phone, 
+                password, 
+                kitchen_name, 
+                address, 
+                pan_card,
+                latitude: latitude ? parseFloat(latitude) : null, 
+                longitude: longitude ? parseFloat(longitude) : null, 
+                profile_pic_url: profilePicUrl 
+            }])
+            .select()
+            .single();
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(201).json({ success: true, message: "Housewife Registered Successfully!", cook: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// =========================================================================
+// 9. APP NEW FIX: HOUSEWIFE (COOK) LOGIN API (By Phone & Password)
+// =========================================================================
+app.post('/api/cook/login', async (req, res) => {
+    const { phone, password } = req.body;
+
+    try {
+        const { data: cook, error } = await supabase
+            .from('cooks')
+            .select('*')
+            .eq('phone', phone)
+            .eq('password', password)
+            .single();
+
+        if (error || !cook) {
+            return res.status(401).json({ success: false, message: "Invalid Phone Number or Password!" });
+        }
+
+        return res.status(200).json({ success: true, message: "Welcome back Chef!", cook });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// =========================================================================
+// 10. APP NEW FIX: KITCHEN ON/OFF STATUS SWITCH (Toggle Button for App)
+// =========================================================================
+app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
+    const { cookId } = req.params;
+    const { is_open } = req.body; // Expecting true or false
+
+    try {
+        const { data, error } = await supabase
+            .from('cooks')
+            .update({ is_open: is_open })
+            .eq('id', cookId)
+            .select()
+            .single();
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: "Kitchen status updated!", cook: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// =========================================================================
+// 11. APP NEW FIX: FETCH COOK'S EXCLUSIVE MENU ITEMS
+// =========================================================================
+app.get('/api/cook/menu/:cookId', async (req, res) => {
+    const { cookId } = req.params;
+
+    try {
+        const { data, error } = await supabase
+            .from('food_items')
+            .select('*')
+            .eq('cook_id', cookId);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, items: data });
     } catch (err) {
         return res.status(500).json({ success: false, error: err.message });
     }
