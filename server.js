@@ -137,6 +137,18 @@ app.post('/api/food-items', upload.single('food_image'), async (req, res) => {
     }
 });
 
+// 🔥 [NEW] DELETE FOOD ITEM API
+app.delete('/api/food-items/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase.from('food_items').delete().eq('id', id);
+        if (error) return res.status(400).json({ success: false, message: error.message });
+        return res.status(200).json({ success: true, message: "Food item deleted successfully!" });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ==========================================
 // 3. LOGIN API (FULL PROFILE DATA)
 // ==========================================
@@ -278,7 +290,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // ==========================================
-// 7. GET ORDER HISTORY API
+// 7. GET ORDER HISTORY API (For Users)
 // ==========================================
 app.get('/api/orders/:userId', async (req, res) => {
     const { userId } = req.params;
@@ -288,7 +300,8 @@ app.get('/api/orders/:userId', async (req, res) => {
             .from('orders')
             .select(`
                 id, total_amount, status, payment_status, created_at,
-                order_items ( quantity, price, food_items ( name ) )
+                order_items ( quantity, price, food_items ( name ) ),
+                cooks ( kitchen_name, phone )
             `)
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
@@ -301,10 +314,43 @@ app.get('/api/orders/:userId', async (req, res) => {
     }
 });
 
+// 🔥 [NEW] UPDATE ORDER STATUS API (For Cooks)
+app.put('/api/orders/status/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    const { status } = req.body; // 'Accepted', 'Preparing', 'Delivered', 'Cancelled'
+
+    try {
+        const { error } = await supabase
+            .from('orders')
+            .update({ status: status })
+            .eq('id', orderId);
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, message: `Order marked as ${status}!` });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // ⚡ =========================================================================
-// HOUSEWIVES (COOKS) APIS (Registration, Login, Menu, ROUTINE)
+// HOUSEWIVES (COOKS) APIS 
 // ========================================================================= ⚡
+
+// 🔥 [NEW] GET ALL COOKS/KITCHENS API (For Customer Home Page)
+app.get('/api/cooks', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('cooks')
+            .select('id, name, kitchen_name, address, profile_pic_url, is_open, rating');
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, kitchens: data });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // ==========================================
 // 8. HOUSEWIFE (COOK) REGISTRATION
@@ -325,7 +371,8 @@ app.post('/api/cook/register', upload.single('profile_pic'), async (req, res) =>
                 name, email, phone, password, kitchen_name, address, pan_card,
                 latitude: latitude ? parseFloat(latitude) : null, 
                 longitude: longitude ? parseFloat(longitude) : null, 
-                profile_pic_url: profilePicUrl 
+                profile_pic_url: profilePicUrl,
+                is_open: true // Default open
             }])
             .select()
             .single();
@@ -386,7 +433,7 @@ app.put('/api/cook/toggle-status/:cookId', async (req, res) => {
 });
 
 // ==========================================
-// 11. FETCH COOK'S EXCLUSIVE MENU ITEMS (Live Orders)
+// 11. FETCH COOK'S EXCLUSIVE MENU ITEMS 
 // ==========================================
 app.get('/api/cook/menu/:cookId', async (req, res) => {
     const { cookId } = req.params;
@@ -405,9 +452,31 @@ app.get('/api/cook/menu/:cookId', async (req, res) => {
     }
 });
 
+// 🔥 [NEW] GET ORDERS RECEIVED BY COOK
+app.get('/api/cook/orders/:cookId', async (req, res) => {
+    const { cookId } = req.params;
+
+    try {
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select(`
+                id, total_amount, status, payment_status, created_at,
+                users ( name, phone, address ),
+                order_items ( quantity, price, food_items ( name ) )
+            `)
+            .eq('cook_id', cookId)
+            .order('created_at', { ascending: false });
+
+        if (error) return res.status(400).json({ success: false, message: error.message });
+
+        return res.status(200).json({ success: true, orders });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // 🗓️ =========================================================================
-// 🔥 NEW FIX: WEEKLY ROUTINE APIs (Monthly Tiffin Plan) 🔥
+// WEEKLY ROUTINE APIs (Monthly Tiffin Plan) 
 // ========================================================================= 🗓️
 
 // ==========================================
@@ -417,14 +486,13 @@ app.post('/api/cook/routine', async (req, res) => {
     const { cook_id, plan_type, monthly_price, day_of_week, morning_meal, afternoon_meal, night_meal } = req.body;
 
     try {
-        // Upsert logic: Update karega agar us din ka us plan ka routine pehle se hai, warna naya banayega
         const { data, error } = await supabase
             .from('weekly_routines')
             .upsert([{
                 cook_id,
-                plan_type, // 'Veg' ya 'Non-Veg'
+                plan_type, 
                 monthly_price: parseInt(monthly_price),
-                day_of_week, // 'Monday', 'Tuesday', etc.
+                day_of_week, 
                 morning_meal,
                 afternoon_meal,
                 night_meal
@@ -444,12 +512,11 @@ app.post('/api/cook/routine', async (req, res) => {
 // ==========================================
 app.get('/api/cook/routine/:cookId', async (req, res) => {
     const { cookId } = req.params;
-    const { plan_type } = req.query; // Frontend can pass ?plan_type=Veg to filter
+    const { plan_type } = req.query; // ?plan_type=Veg
 
     try {
         let query = supabase.from('weekly_routines').select('*').eq('cook_id', cookId);
         
-        // Agar Veg ya Non-Veg filter pass kiya hai, toh filter lagao
         if (plan_type) {
             query = query.eq('plan_type', plan_type);
         }
