@@ -19,176 +19,203 @@
         .back-btn { text-decoration: none; color: #555; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .back-btn:hover { color: var(--primary); }
 
-        /* Main Container */
-        .cart-container { max-width: 1100px; margin: 30px auto; padding: 0 5%; display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
+        /* Cart Container */
+        .cart-container { max-width: 1000px; margin: 40px auto; padding: 0 5%; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
         
-        /* Left Column */
-        .cart-left { flex: 1.4; min-width: 320px; display: flex; flex-direction: column; gap: 25px; }
-        .cart-block { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border); }
-        .section-title { font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
-
-        /* Cart Items */
-        .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px dashed var(--border); gap: 15px; }
-        .cart-item:last-child { border-bottom: none; }
-        .item-details { display: flex; align-items: center; gap: 15px; }
-        .item-details img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; }
-        .item-info h4 { font-size: 1.05rem; font-weight: 700; color: var(--dark); }
-        .item-info p { font-size: 0.8rem; color: #777; margin-top: 2px; }
-
+        /* Left: Cart Items */
+        .cart-items-section { flex: 2; min-width: 320px; }
+        .cart-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; color: var(--dark); }
+        
+        .cart-item { background: white; padding: 15px; border-radius: 16px; display: flex; gap: 15px; align-items: center; border: 1px solid var(--border); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .cart-item img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; }
+        .item-info { flex: 1; }
+        .item-info h4 { font-size: 1.1rem; color: var(--dark); margin-bottom: 5px; }
+        .item-info p { font-size: 0.85rem; color: #777; margin-bottom: 8px; }
+        .item-price { font-weight: 700; color: var(--dark); font-size: 1.1rem; }
+        
+        /* Quantity Controls */
+        .qty-controls { display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 5px; border-radius: 8px; }
+        .qty-btn { width: 30px; height: 30px; border: none; background: white; border-radius: 5px; font-weight: bold; cursor: pointer; color: var(--primary); font-size: 1.2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .qty-val { font-weight: 700; width: 20px; text-align: center; }
+        
+        /* Right: Checkout Section */
+        .checkout-section { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: sticky; top: 100px; }
+        .checkout-section h3 { font-size: 1.3rem; margin-bottom: 20px; border-bottom: 1px dashed var(--border); padding-bottom: 10px; }
+        
+        .bill-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: #555; font-size: 0.95rem; }
+        .bill-total { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px dashed var(--border); font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+        
         /* Payment Options */
-        .payment-option { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.3s; }
-        .payment-option:hover { border-color: var(--primary); background: #fffaf5; }
-        .payment-option input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; }
-        .payment-details h4 { font-size: 1rem; color: var(--dark); }
-        .payment-details p { font-size: 0.8rem; color: #777; }
-
-        /* Counter & Price */
-        .quantity-counter { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fafafa; }
-        .counter-btn { background: none; border: none; width: 32px; height: 32px; font-size: 1.1rem; font-weight: 600; cursor: pointer; color: var(--primary); }
-        .count-value { width: 30px; text-align: center; font-weight: 600; font-size: 0.95rem; }
-        .item-price { font-size: 1.1rem; font-weight: 700; color: var(--dark); min-width: 70px; text-align: right; }
-
-        /* Right Column */
-        .cart-right { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid var(--border); position: sticky; top: 100px; }
-        .bill-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; color: #666; font-weight: 500; }
-        .bill-row.total { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+        .payment-options { margin-top: 25px; margin-bottom: 20px; }
+        .payment-options h4 { font-size: 1rem; margin-bottom: 10px; color: var(--dark); }
+        .pay-method { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; }
         
-        .checkout-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px; box-shadow: 0 8px 20px rgba(255, 107, 0, 0.25); transition: 0.3s; }
-        .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(255, 107, 0, 0.35); }
-        .checkout-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+        .checkout-btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(255, 107, 0, 0.25); }
+        .checkout-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255, 107, 0, 0.35); }
+        .checkout-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .empty-cart-msg { text-align: center; padding: 40px 20px; color: #888; font-size: 1.1rem; }
+        .empty-cart { text-align: center; padding: 50px 20px; }
+        .empty-cart img { width: 150px; opacity: 0.5; margin-bottom: 20px; }
+        .empty-cart h2 { color: var(--dark); margin-bottom: 10px; }
+        .empty-cart a { display: inline-block; margin-top: 15px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: 600; }
 
-        @media (max-width: 768px) { .cart-container { flex-direction: column; } }
+        @media (max-width: 768px) {
+            .cart-container { flex-direction: column; }
+            .checkout-section { position: relative; top: 0; width: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <a href="live-menu.html" class="back-btn">⬅ Continue Ordering</a>
+        <a href="live-menu.html" class="back-btn">⬅ Back to Menu</a>
         <a href="index.html" class="logo">Home<span>Bite</span></a>
     </nav>
 
-    <div class="cart-container" id="cartContainer">
-        <div class="cart-left">
-            <div class="cart-block">
-                <h2 class="section-title">🛒 Review Items</h2>
-                <div id="cartItemsList"></div>
-            </div>
-
-            <div class="cart-block">
-                <h2 class="section-title">💳 Payment Method</h2>
-                <label class="payment-option">
-                    <input type="radio" name="paymentMethod" value="COD" checked>
-                    <div class="payment-details">
-                        <h4>Cash on Delivery (COD)</h4>
-                        <p>Pay cash or scan UPI when your tiffin arrives.</p>
-                    </div>
-                </label>
-                <label class="payment-option">
-                    <input type="radio" name="paymentMethod" value="Online">
-                    <div class="payment-details">
-                        <h4>Online Payment</h4>
-                        <p>Pay via UPI/GPay/PhonePe before delivery.</p>
-                    </div>
-                </label>
-            </div>
+    <div class="cart-container">
+        
+        <div class="cart-items-section">
+            <h1 class="cart-title">Your Cart 🛒</h1>
+            <div id="cartItemsContainer">
+                </div>
         </div>
 
-        <div class="cart-right">
-            <h2 class="section-title">📄 Bill Details</h2>
-            <div class="bill-row"><span>Item Total</span><span id="billSubtotal">₹0</span></div>
-            <div class="bill-row"><span>Delivery Partner Fee</span><span>₹15</span></div>
-            <div class="bill-row"><span>Govt Taxes & Packing</span><span>₹10</span></div>
-            <div class="bill-row total"><span>To Pay</span><span id="billGrandTotal" style="color: var(--primary);">₹0</span></div>
-            <button class="checkout-btn" id="payBtn" onclick="checkoutOrder()">📦 Place Order</button>
+        <div class="checkout-section" id="checkoutSection" style="display: none;">
+            <h3>Bill Details</h3>
+            
+            <div class="bill-row">
+                <span>Item Total</span>
+                <span id="itemTotal">₹0</span>
+            </div>
+            <div class="bill-row">
+                <span>Delivery Partner Fee</span>
+                <span>₹20</span>
+            </div>
+            <div class="bill-row">
+                <span>Platform Fee</span>
+                <span>₹5</span>
+            </div>
+            
+            <div class="bill-total">
+                <span>To Pay</span>
+                <span id="grandTotal">₹0</span>
+            </div>
+
+            <div class="payment-options">
+                <h4>Payment Method</h4>
+                <label class="pay-method">
+                    <input type="radio" name="payment" value="Online" checked> UPI / Card / NetBanking
+                </label>
+                <label class="pay-method">
+                    <input type="radio" name="payment" value="COD"> Cash on Delivery (COD)
+                </label>
+            </div>
+
+            <button class="checkout-btn" id="payBtn" onclick="placeOrder()">📦 Place Order</button>
         </div>
+
     </div>
 
     <script>
-        // Fetch cart data from localStorage
-        let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
-        
-        // Fetch Logged-in user from localStorage
-        let loggedInUser = JSON.parse(localStorage.getItem('homeBiteUser'));
+        // 🔴 CHANGE THIS TO YOUR ACTUAL RENDER BACKEND URL 🔴
+        const API_URL = "https://homebite-gepq.onrender.com"; 
 
-        const deliveryFee = 15;
-        const taxesFee = 10;
-        let subtotal = 0;
-        let grandTotal = 0;
+        // Fetch cart from localStorage (live-menu.html me 'homeBiteCart' naam se save kiya tha)
+        let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
 
         function updateCartUI() {
-            const listContainer = document.getElementById('cartItemsList');
-            const payBtn = document.getElementById('payBtn');
-            listContainer.innerHTML = '';
-            subtotal = 0;
+            const container = document.getElementById('cartItemsContainer');
+            const checkoutBox = document.getElementById('checkoutSection');
+            
+            container.innerHTML = '';
 
             if (cart.length === 0) {
-                listContainer.innerHTML = `<div class="empty-cart-msg">😔 Your cart is empty! Go add some delicious food.</div>`;
-                document.getElementById('billSubtotal').innerText = `₹0`;
-                document.getElementById('billGrandTotal').innerText = `₹0`;
-                payBtn.disabled = true;
+                checkoutBox.style.display = 'none';
+                container.innerHTML = `
+                    <div class="empty-cart">
+                        <h2>Your cart is empty 😕</h2>
+                        <p style="color: #777;">Looks like you haven't added any delicious food yet.</p>
+                        <a href="live-menu.html">Browse Live Menu</a>
+                    </div>
+                `;
                 return;
             }
 
-            payBtn.disabled = false;
+            checkoutBox.style.display = 'block';
+            let totalAmount = 0;
 
             cart.forEach((item, index) => {
-                let itemTotalCost = item.basePrice * item.quantity;
-                subtotal += itemTotalCost;
-                listContainer.innerHTML += `
+                const itemTotal = item.basePrice * item.quantity;
+                totalAmount += itemTotal;
+
+                container.innerHTML += `
                     <div class="cart-item">
-                        <div class="item-details">
-                            <img src="${item.img}" alt="${item.name}">
-                            <div class="item-info"><h4>${item.name}</h4><p>👩‍🍳 By ${item.chefName}</p></div>
+                        <img src="${item.img}" alt="${item.name}">
+                        <div class="item-info">
+                            <h4>${item.name}</h4>
+                            <p>👩‍🍳 By ${item.chefName}</p>
+                            <div class="item-price">₹${itemTotal}</div>
                         </div>
-                        <div class="quantity-counter">
-                            <button class="counter-btn" onclick="changeQty(${index}, -1)">-</button>
-                            <span class="count-value">${item.quantity}</span>
-                            <button class="counter-btn" onclick="changeQty(${index}, 1)">+</button>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                            <span class="qty-val">${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                         </div>
-                        <div class="item-price">₹${itemTotalCost}</div>
-                    </div>`;
+                    </div>
+                `;
             });
 
-            grandTotal = subtotal + deliveryFee + taxesFee;
-            document.getElementById('billSubtotal').innerText = `₹${subtotal}`;
-            document.getElementById('billGrandTotal').innerText = `₹${grandTotal}`;
+            // Update Billing
+            document.getElementById('itemTotal').innerText = `₹${totalAmount}`;
+            const grandTotal = totalAmount + 20 + 5; // Adding delivery (20) & platform fee (5)
+            document.getElementById('grandTotal').innerText = `₹${grandTotal}`;
+            
+            // Save grand total in window for easy access during placeOrder()
+            window.currentGrandTotal = grandTotal;
         }
 
-        function changeQty(index, change) {
+        function updateQty(index, change) {
             cart[index].quantity += change;
+            
             if (cart[index].quantity <= 0) {
-                cart.splice(index, 1);
+                cart.splice(index, 1); // Remove item if quantity goes to 0
             }
+            
             localStorage.setItem('homeBiteCart', JSON.stringify(cart));
             updateCartUI();
         }
 
-        // Send Data to Backend API
-        async function checkoutOrder() {
-            if(!loggedInUser) {
+        async function placeOrder() {
+            // Check if user is logged in
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (!userData || !userData.id) {
                 alert("Please login first to place an order!");
                 window.location.href = "login.html";
                 return;
             }
 
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            // Default fallback if chefId is missing (e.g., if cart data is old)
+            // Realistically, items in cart should have same chefId if we group orders by chef,
+            // but for now, we take the chefId of the first item in the cart.
+            const cookId = cart[0].chefId; 
+            
+            if (!cookId) {
+                alert("Chef ID missing! Please clear your cart and add items again from the Live Menu.");
+                return;
+            }
+
+            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
             const payBtn = document.getElementById('payBtn');
 
-            // NOTE: Database me `cook_id` ki zarurat hai. Agar cart me items hain, toh hum pehle item ka chef_id nikalenge.
-            // *Zaruri Baat: Jab aap original Supabase UUIDs dalenge, toh cart item mein valid 'chefId' pass hona chahiye.
-            let firstChefId = cart.length > 0 ? cart[0].chefId : null;
-
             const orderPayload = {
-                userId: loggedInUser.id, 
-                cookId: firstChefId, // Assumes order belongs to 1 chef
+                userId: userData.id,
+                cookId: cookId,
                 items: cart.map(item => ({
-                    foodId: item.id, // Original Database se aaya food UUID
+                    foodId: item.id,
                     price: item.basePrice,
                     quantity: item.quantity
                 })),
-                grandTotal: grandTotal,
+                grandTotal: window.currentGrandTotal,
                 paymentMethod: paymentMethod
             };
 
@@ -196,7 +223,7 @@
                 payBtn.innerText = "Processing Order...";
                 payBtn.disabled = true;
 
-                const response = await fetch('/api/orders', {
+                const response = await fetch(`${API_URL}/api/orders`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(orderPayload)
@@ -205,11 +232,11 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert("🎉 Order Placed Successfully!");
-                    localStorage.removeItem('homeBiteCart'); // Order hone ke baad cart khali kar do
-                    window.location.href = "orderhistory.html"; // Order History page par bhejo
+                    alert("🎉 Order Placed Successfully! It has been sent to the Kitchen.");
+                    localStorage.removeItem('homeBiteCart'); // Clear Cart
+                    window.location.href = "profile.html"; // Redirect to User Profile/History
                 } else {
-                    alert("❌ Order Failed! Make sure your Live-Menu items have valid Database UUIDs. Error: " + result.message);
+                    alert("❌ Order Failed! " + result.message);
                     payBtn.innerText = "📦 Place Order";
                     payBtn.disabled = false;
                 }
@@ -221,6 +248,7 @@
             }
         }
 
+        // Initialize UI on page load
         window.onload = updateCartUI;
     </script>
 </body>
