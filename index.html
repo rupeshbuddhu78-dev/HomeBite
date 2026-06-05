@@ -102,7 +102,7 @@
         .chef-link { font-size: 0.9rem; color: #777; text-decoration: none; margin-bottom: 15px; display: inline-block; font-weight: 500; transition: 0.2s; }
         .chef-link:hover { color: var(--primary); text-decoration: underline; }
         
-        .food-desc { font-size: 0.9rem; color: #666; margin-bottom: 20px; line-height: 1.4; flex: 1; }
+        .food-desc { font-size: 0.9rem; color: #666; margin-bottom: 20px; line-height: 1.4; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         .food-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #eee; padding-top: 15px; }
         .food-price { font-size: 1.5rem; font-weight: 800; color: var(--dark); }
@@ -115,53 +115,22 @@
         .grid-whatsapp { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
         
         .group-card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 16px; 
-            border: 1px solid #eaeaea; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.04); 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            transition: all 0.3s ease; 
+            background: white; padding: 20px; border-radius: 16px; border: 1px solid #eaeaea; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 15px; transition: all 0.3s ease; 
         }
-        .group-card:hover { 
-            border-color: var(--whatsapp); 
-            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.15); 
-            transform: translateY(-5px); 
-        }
+        .group-card:hover { border-color: var(--whatsapp); box-shadow: 0 12px 30px rgba(37, 211, 102, 0.15); transform: translateY(-5px); }
         
-        .group-img { 
-            width: 65px; 
-            height: 65px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 2px solid #fff; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
-        }
+        .group-img { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
         .group-info { flex: 1; }
         .group-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
         .group-info p { font-size: 0.85rem; color: #666; display: flex; align-items: center; gap: 5px; }
         
         .wa-btn { 
-            background: var(--whatsapp); 
-            color: white; 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            text-decoration: none; 
-            font-size: 1.3rem; 
-            transition: 0.3s; 
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            background: var(--whatsapp); color: white; width: 42px; height: 42px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 1.3rem; 
+            transition: 0.3s; flex-shrink: 0; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
         }
-        .wa-btn:hover { 
-            transform: scale(1.1) rotate(-5deg); 
-            box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4); 
-        }
+        .wa-btn:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 6px 18px rgba(37, 211, 102, 0.4); }
 
         /* === PREMIUM FOOTER === */
         .footer { background: var(--dark); color: white; padding: 80px 5% 30px; border-top: 5px solid var(--primary); }
@@ -210,7 +179,6 @@
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar">
         <a href="index.html" class="logo">Home<span>Bite</span></a>
         
@@ -230,14 +198,12 @@
         <div class="menu-toggle" id="menuToggle">☰</div>
     </nav>
 
-    <!-- HERO SECTION -->
     <section class="hero">
         <div class="hero-text">
             <div class="badge">🚀 Revolutionizing Hostel Meals in Patna</div>
             <h1>Find the Best <br><span style="color: var(--primary);">Home-Chefs</span> <br>Near Your Hostel.</h1>
             <p>Connect directly with local housewives. Check their weekly routines, see who is cooking live, and subscribe to healthy, affordable monthly tiffins.</p>
             
-            <!-- Replaced Search Box with Responsive Button -->
             <div style="margin-top: 20px;">
                 <button class="btn btn-primary" onclick="window.location.href='live-menu.html'" style="padding: 14px 35px; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(255, 107, 0, 0.3);">Explore Live Menus ➔</button>
             </div>
@@ -256,7 +222,6 @@
         </div>
     </section>
 
-    <!-- 8 LIVE MENU ITEMS SECTION -->
     <section class="live-section">
         <div class="section-header">
             <div>
@@ -266,170 +231,10 @@
             <a href="live-menu.html" class="btn btn-outline">View All Live Menus ➔</a>
         </div>
 
-        <div class="grid-8">
-            <!-- Food 1 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">THALI</span>
-                    <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=80" alt="Rajma Chawal">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Special Rajma Chawal</h3>
-                    </div>
-                    <a href="routine.html?id=1" class="chef-link">👩‍🍳 By Aarti Sharma</a>
-                    <p class="food-desc">Punjabi style rajma with jeera rice & onion salad.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹80</div>
-                        <button class="add-btn" onclick="addToCart(101, 'Special Rajma Chawal', 'Aarti Sharma', 80, 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
+        <div class="grid-8" id="liveFoodGrid">
             </div>
-
-            <!-- Food 2 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">HEALTHY</span>
-                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400&q=80" alt="Healthy Diet Thali">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Healthy Diet Thali</h3>
-                    </div>
-                    <a href="routine.html?id=2" class="chef-link">👩‍🍳 By Sunita Verma</a>
-                    <p class="food-desc">Brown rice, mixed dal, boiled green sabzi & salad.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹100</div>
-                        <button class="add-btn" onclick="addToCart(103, 'Healthy Diet Thali', 'Sunita Verma', 100, 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 3 (Non-Veg) -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">BIRYANI</span>
-                    <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=400&q=80" alt="Chicken Dum Biryani">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon nonveg-icon"></span>
-                        <h3 class="food-title">Chicken Dum Biryani</h3>
-                    </div>
-                    <a href="routine.html?id=3" class="chef-link">👩‍🍳 By Priya Singh</a>
-                    <p class="food-desc">Aromatic chicken biryani with fresh mint raita.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹150</div>
-                        <button class="add-btn" onclick="addToCart(105, 'Chicken Dum Biryani', 'Priya Singh', 150, 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 4 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">SNACKS</span>
-                    <img src="https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=400&q=80" alt="Authentic Litti Chokha">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Authentic Litti Chokha</h3>
-                    </div>
-                    <a href="routine.html?id=4" class="chef-link">👩‍🍳 By Meena Aunty</a>
-                    <p class="food-desc">4 Littis dipped in pure ghee with baingan chokha.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹70</div>
-                        <button class="add-btn" onclick="addToCart(107, 'Authentic Litti Chokha', 'Meena Aunty', 70, 'https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 5 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">SNACKS</span>
-                    <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=400&q=80" alt="Chole Bhature">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Chole Bhature (2 pcs)</h3>
-                    </div>
-                    <a href="routine.html?id=5" class="chef-link">👩‍🍳 By Anjali Gupta</a>
-                    <p class="food-desc">Delhi style spicy chole with 2 fluffy bhaturas.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹90</div>
-                        <button class="add-btn" onclick="addToCart(108, 'Chole Bhature', 'Anjali Gupta', 90, 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 6 (Non-Veg) -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">THALI</span>
-                    <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=400&q=80" alt="Chicken Curry">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon nonveg-icon"></span>
-                        <h3 class="food-title">Home-style Chicken Curry</h3>
-                    </div>
-                    <a href="routine.html?id=6" class="chef-link">👩‍🍳 By Kavita Yadav</a>
-                    <p class="food-desc">Tender chicken cooked in basic home spices with 4 roti.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹140</div>
-                        <button class="add-btn" onclick="addToCart(109, 'Home-style Chicken Curry', 'Kavita Yadav', 140, 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 7 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">THALI</span>
-                    <img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=400&q=80" alt="Dal Makhani">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Dal Makhani & Jeera Rice</h3>
-                    </div>
-                    <a href="routine.html?id=8" class="chef-link">👩‍🍳 By Neelam Pandey</a>
-                    <p class="food-desc">Creamy overnight cooked dal makhani with rice.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹100</div>
-                        <button class="add-btn" onclick="addToCart(111, 'Dal Makhani & Rice', 'Neelam Pandey', 100, 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Food 8 -->
-            <div class="food-card">
-                <div class="food-img">
-                    <span class="category-tag">SNACKS</span>
-                    <img src="https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?auto=format&fit=crop&w=400&q=80" alt="Masala Dosa">
-                </div>
-                <div class="food-details">
-                    <div class="food-title-row">
-                        <span class="veg-icon"></span>
-                        <h3 class="food-title">Masala Dosa</h3>
-                    </div>
-                    <a href="routine.html?id=9" class="chef-link">👩‍🍳 By Pooja Mishra</a>
-                    <p class="food-desc">Crispy dosa served with sambar and coconut chutney.</p>
-                    <div class="food-bottom">
-                        <div class="food-price">₹85</div>
-                        <button class="add-btn" onclick="addToCart(112, 'Masala Dosa', 'Pooja Mishra', 85, 'https://images.unsplash.com/photo-1589301760014-d929f39ce9b1?auto=format&fit=crop&w=150&q=80')">ADD</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
 
-    <!-- 6 WHATSAPP GROUPS SECTION (ENHANCED DESIGN) -->
     <section class="groups-section">
         <div class="section-header">
             <div>
@@ -439,64 +244,10 @@
             <a href="menu.html" class="btn btn-outline" style="border-color: var(--whatsapp); color: var(--whatsapp);">Explore All Groups ➔</a>
         </div>
 
-        <div class="grid-whatsapp">
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Aarti Veg Kitchen</h3>
-                    <p>🔥 142 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Aarti Veg Kitchen" target="_blank" class="wa-btn">💬</a>
+        <div class="grid-whatsapp" id="whatsappGrid">
             </div>
-            
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Sunita Healthy Tiffin</h3>
-                    <p>🔥 85 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Sunita Healthy Tiffin" target="_blank" class="wa-btn">💬</a>
-            </div>
-            
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Priya Homestyle Food</h3>
-                    <p>🔥 110 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Priya Homestyle Food" target="_blank" class="wa-btn">💬</a>
-            </div>
-            
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Meena Aunty Rasoi</h3>
-                    <p>🔥 60 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Meena Aunty Rasoi" target="_blank" class="wa-btn">💬</a>
-            </div>
-            
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Anjali Fresh Bites</h3>
-                    <p>🔥 95 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Anjali Fresh Bites" target="_blank" class="wa-btn">💬</a>
-            </div>
-            
-            <div class="group-card">
-                <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=100&q=80" class="group-img" alt="Chef">
-                <div class="group-info">
-                    <h3>Kavita Premium Tiffin</h3>
-                    <p>🔥 130 students joined</p>
-                </div>
-                <a href="https://wa.me/1234567890?text=I want to join Kavita Premium Tiffin" target="_blank" class="wa-btn">💬</a>
-            </div>
-        </div>
     </section>
 
-    <!-- PREMIUM FOOTER -->
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-col">
@@ -530,21 +281,19 @@
         </div>
     </footer>
 
-    <!-- ADD TO CART & NAVBAR JAVASCRIPT -->
     <script>
-        // Update cart count on load
+        const API_URL = "https://homebite-gepq.onrender.com";
+
+        // === CART LOGIC ===
         function updateCartCount() {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
             let count = cart.reduce((total, item) => total + item.quantity, 0);
             document.getElementById('navCartCount').innerText = count;
         }
 
-        // Add Item to LocalStorage
-        function addToCart(id, name, chefName, price, img) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            
-            // Check if item already exists in cart
-            let existingItem = cart.find(i => i.id === id);
+        function addToCart(id, name, chefName, chefId, price, img) {
+            let cart = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
+            let existingItem = cart.find(i => i.id == id);
             
             if(existingItem) {
                 existingItem.quantity += 1;
@@ -553,43 +302,129 @@
                     id: id,
                     name: name,
                     chefName: chefName,
+                    chefId: chefId,
                     basePrice: price,
                     quantity: 1,
                     img: img
                 });
             }
             
-            localStorage.setItem('cart', JSON.stringify(cart));
+            localStorage.setItem('homeBiteCart', JSON.stringify(cart));
             updateCartCount();
-            
-            // Visual feedback
             alert(name + " added to your cart! Click on 'Cart 🛒' in menu to checkout.");
         }
 
-        // Run when page loads
-        window.onload = updateCartCount;
+        // === FETCH LIVE FOOD (MAX 8) ===
+        async function fetchLiveFood() {
+            const grid = document.getElementById('liveFoodGrid');
+            grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 40px; color: var(--primary); font-weight: bold; font-size: 1.2rem;">Fetching fresh dishes from local kitchens...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/food-items`);
+                const data = await response.json();
+                
+                if(data.success && data.items && data.items.length > 0) {
+                    grid.innerHTML = '';
+                    const limitedItems = data.items.slice(0, 8); // Limit to 8
+                    
+                    limitedItems.forEach(item => {
+                        const isVeg = item.type === 'Veg' || item.type === 'veg';
+                        const iconClass = isVeg ? 'veg-icon' : 'veg-icon nonveg-icon';
+                        const imgUrl = item.image_url ? item.image_url : 'https://via.placeholder.com/400x200?text=Food';
+                        const cookName = item.cook_name ? item.cook_name : 'Home Chef';
+                        const desc = item.description || "Fresh, homely, and cooked with love.";
+                        const category = item.type || "MEAL"; 
+                        
+                        grid.innerHTML += `
+                            <div class="food-card">
+                                <div class="food-img">
+                                    <span class="category-tag">${category.toUpperCase()}</span>
+                                    <img src="${imgUrl}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/400x200?text=Food'">
+                                </div>
+                                <div class="food-details">
+                                    <div class="food-title-row">
+                                        <span class="${iconClass}"></span>
+                                        <h3 class="food-title">${item.name}</h3>
+                                    </div>
+                                    <a href="routine.html?id=${item.cook_id}" class="chef-link">👩‍🍳 By ${cookName}</a>
+                                    <p class="food-desc">${desc}</p>
+                                    
+                                    <div class="food-bottom">
+                                        <div class="food-price">₹${item.price}</div>
+                                        <button onclick="addToCart('${item.id}', '${item.name}', '${cookName}', '${item.cook_id}', ${item.price}, '${imgUrl}')" class="add-btn">ADD</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 40px;">No live food available right now.</div>';
+                }
+            } catch(err) {
+                console.error(err);
+                grid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 40px; color: red;">Error connecting to server.</div>';
+            }
+        }
 
-        // ==========================================
-        // NEW FIX: MOBILE NAVBAR CLOSE LOGIC
-        // ==========================================
+        // === FETCH WHATSAPP GROUPS DYNAMICALLY ===
+        async function fetchCooksForWhatsApp() {
+            const waGrid = document.getElementById('whatsappGrid');
+            waGrid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; padding: 40px; color: var(--whatsapp); font-weight: bold; font-size: 1.2rem;">Loading Whatsapp Groups...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/cooks`);
+                const data = await response.json();
+                
+                if (data.success && data.kitchens && data.kitchens.length > 0) {
+                    waGrid.innerHTML = '';
+                    const limitedCooks = data.kitchens.slice(0, 6); // Limit to 6 groups
+                    
+                    limitedCooks.forEach(cook => {
+                        const imgUrl = cook.profile_pic_url ? cook.profile_pic_url : 'https://via.placeholder.com/100?text=Chef';
+                        const members = Math.floor(Math.random() * 100) + 50; // Random member count for showcase
+                        const name = cook.kitchen_name || cook.name;
+                        
+                        waGrid.innerHTML += `
+                            <div class="group-card">
+                                <img src="${imgUrl}" class="group-img" alt="Chef" onerror="this.src='https://via.placeholder.com/100?text=Chef'">
+                                <div class="group-info">
+                                    <h3>${name}</h3>
+                                    <p>🔥 ${members} students joined</p>
+                                </div>
+                                <a href="https://wa.me/919876543210?text=I want to join ${encodeURIComponent(name)}" target="_blank" class="wa-btn">💬</a>
+                            </div>
+                        `;
+                    });
+                } else {
+                    waGrid.innerHTML = '<div style="text-align:center; grid-column: 1/-1;">No groups found.</div>';
+                }
+            } catch(err) {
+                 waGrid.innerHTML = '<div style="text-align:center; grid-column: 1/-1; color: red;">Failed to load groups.</div>';
+            }
+        }
+
+        // Run when page loads
+        window.onload = () => {
+            updateCartCount();
+            fetchLiveFood();
+            fetchCooksForWhatsApp();
+        };
+
+        // === MOBILE NAVBAR CLOSE LOGIC ===
         const navLinks = document.getElementById('navLinks');
         const menuToggle = document.getElementById('menuToggle');
 
-        // 1. Open/Close menu when clicking the hamburger icon
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
         });
 
-        // 2. Close menu when clicking ANY link inside the navbar
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', () => {
                 navLinks.classList.remove('active');
             });
         });
 
-        // 3. Close menu when clicking ANYWHERE outside the navbar
         document.addEventListener('click', (event) => {
-            // Check if menu is active, and if the click was outside the menu AND the toggle button
             if (navLinks.classList.contains('active') && !navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
                 navLinks.classList.remove('active');
             }
