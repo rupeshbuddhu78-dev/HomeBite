@@ -68,7 +68,6 @@
 
         /* Loader */
         .loader { text-align: center; grid-column: 1 / -1; padding: 40px; color: var(--primary); font-weight: bold; }
-
     </style>
 </head>
 <body>
@@ -89,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Address Modal -->
     <div class="modal-overlay" id="addressModal">
         <div class="modal" id="modalContent">
             <h2 id="modalTitle">Add New Address</h2>
@@ -120,7 +118,7 @@
     </div>
 
     <script>
-        // 🔴 UPDATE TO YOUR RENDER URL
+        // === 🔴 API CONFIGURATION ===
         const API_URL = "https://homebite-gepq.onrender.com"; 
         
         const loggedInUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userData'));
@@ -138,6 +136,12 @@
             const grid = document.getElementById('addressGrid');
             try {
                 const res = await fetch(`${API_URL}/api/addresses/${userId}`);
+                
+                if (res.status === 404) {
+                    grid.innerHTML = `<div class="empty-state"><h3>API 404 Error</h3><p>Server check karein ki backend routes properly deployed hain ya nahi.</p></div>`;
+                    return;
+                }
+
                 const data = await res.json();
                 
                 if (data.success) {
@@ -157,7 +161,7 @@
             const grid = document.getElementById('addressGrid');
             grid.innerHTML = '';
 
-            if (addresses.length === 0) {
+            if (!addresses || addresses.length === 0) {
                 grid.innerHTML = `
                     <div class="empty-state">
                         <h3>No addresses found 🏠</h3>
@@ -233,7 +237,14 @@
             btn.innerText = "Saving...";
             btn.disabled = true;
 
-            const payload = { userId, full_address, landmark, pincode };
+            // Database standard object mapping (matching database schema key names)
+            const payload = { 
+                userId: userId, // explicitly passing camelCase which backend destructs
+                full_address: full_address, 
+                landmark: landmark, 
+                pincode: pincode 
+            };
+            
             const method = id ? "PUT" : "POST";
             const url = id ? `${API_URL}/api/addresses/${id}` : `${API_URL}/api/addresses`;
 
