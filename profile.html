@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - HomeBite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         /* === GLOBAL SETTINGS === */
@@ -31,7 +31,7 @@
         .menu-toggle { display: none; font-size: 28px; cursor: pointer; color: var(--dark); }
 
         /* === PROFILE CONTAINER === */
-        .profile-container { max-width: 1100px; margin: 120px auto 50px; padding: 0 5%; }
+        .profile-container { max-width: 1200px; margin: 120px auto 50px; padding: 0 5%; }
         
         /* === PREMIUM PROFILE HERO BANNER === */
         .profile-banner { 
@@ -49,74 +49,55 @@
         }
         
         /* Profile Image Container */
-        .profile-img-container {
-            position: relative;
-            width: 115px;
-            height: 115px;
-            cursor: pointer;
-        }
+        .profile-img-container { position: relative; width: 130px; height: 130px; cursor: pointer; flex-shrink: 0; }
         .profile-img { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%; 
+            width: 100%; height: 100%; border-radius: 50%; 
             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 2.4rem; 
-            color: white; 
-            font-weight: 800; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 3rem; color: white; font-weight: 800; 
             box-shadow: 0 8px 25px rgba(255, 60, 0, 0.25);
-            border: 4px solid white;
-            object-fit: cover;
-            overflow: hidden;
+            border: 5px solid white; object-fit: cover; overflow: hidden;
         }
-        .profile-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .profile-img img { width: 100%; height: 100%; object-fit: cover; }
         .image-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            opacity: 0;
-            transition: 0.3s ease;
-            border: 4px solid white;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.1rem; opacity: 0; transition: 0.3s ease; border: 5px solid white; font-weight: 600;
         }
-        .profile-img-container:hover .image-overlay {
-            opacity: 1;
-        }
+        .profile-img-container:hover .image-overlay { opacity: 1; }
 
-        .profile-info h1 { font-size: 2.2rem; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; margin-bottom: 5px; }
-        .profile-info .email-phone { color: #555; font-size: 1rem; font-weight: 500; display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+        .profile-info { flex: 1; }
+        .profile-info h1 { font-size: 2.5rem; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; margin-bottom: 8px; }
+        .profile-info .email-phone { color: #555; font-size: 1.05rem; font-weight: 500; display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px; }
         .profile-info .address-badge { 
-            background: #fff5eb; color: var(--secondary); font-size: 0.9rem; font-weight: 600; 
-            padding: 6px 16px; border-radius: 50px; display: inline-flex; align-items: center; gap: 6px;
+            background: #fff5eb; color: var(--secondary); font-size: 0.95rem; font-weight: 600; 
+            padding: 8px 20px; border-radius: 50px; display: inline-flex; align-items: center; gap: 8px;
             border: 1px solid rgba(255, 107, 0, 0.15);
         }
 
-        /* === DASHBOARD LAYOUT (Centered single column for operations) === */
-        .content-grid { display: grid; grid-template-columns: 1fr; max-width: 750px; margin: 0 auto; gap: 35px; }
-        .card { background: white; padding: 30px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
-        .section-title { font-size: 1.3rem; font-weight: 800; color: var(--dark); margin-bottom: 25px; border-bottom: 2px solid #f9f9f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        /* === DESKTOP GRID LAYOUT === */
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        
+        .card { background: white; padding: 35px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.02); height: 100%; }
+        .section-title { font-size: 1.4rem; font-weight: 800; color: var(--dark); margin-bottom: 25px; border-bottom: 2px solid #f9f9f9; padding-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 
         /* === SETTINGS MENU === */
         .settings-list { list-style: none; }
         .settings-item { 
-            padding: 14px 18px; border-radius: 14px; color: #444; font-weight: 600; font-size: 0.95rem;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+            padding: 16px 20px; border-radius: 14px; color: #444; font-weight: 600; font-size: 1rem;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border: 1px solid transparent;
         }
-        .settings-item:hover { background: #fff5eb; color: var(--primary); transform: translateX(5px); }
+        .settings-item:hover { background: #fff5eb; color: var(--primary); border-color: #ffe1cd; transform: translateX(5px); }
+
+        /* Subscription Card Special Styles */
+        .sub-box { background: #fdfaf7; border: 1px dashed #ffd1b3; padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .sub-info h4 { color: var(--dark); font-size: 1.1rem; margin-bottom: 5px; }
+        .sub-info p { color: #666; font-size: 0.9rem; }
+        .sub-status { background: #e8f9f0; color: #00d26a; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
 
         /* === LOGOUT BUTTON === */
-        .logout-btn { background: #fff1f0; color: #d93025; padding: 14px; border-radius: 14px; border: 1px solid rgba(217, 48, 37, 0.1); font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .logout-btn { background: #fff1f0; color: #d93025; padding: 15px; border-radius: 14px; border: 1px solid rgba(217, 48, 37, 0.1); font-size: 1.05rem; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .logout-btn:hover { background: #d93025; color: white; box-shadow: 0 8px 20px rgba(217, 48, 37, 0.2); }
 
         /* === PREMIUM MODAL (POPUP) STYLES === */
@@ -137,13 +118,13 @@
         .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #444; }
         .form-group input, .form-group textarea {
             width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px;
-            font-size: 0.95rem; outline: none; transition: 0.3s;
+            font-size: 0.95rem; outline: none; transition: 0.3s; font-family: inherit;
         }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #fff5eb; }
         .save-btn { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .save-btn:hover { background: var(--secondary); }
 
-        /* === RESPONSIVE DESIGN === */
+        /* === MOBILE RESPONSIVENESS === */
         @media (max-width: 900px) {
             .nav-links { 
                 position: absolute; top: 100%; left: 0; width: 100%; 
@@ -153,8 +134,14 @@
             }
             .nav-links.active { display: flex; }
             .menu-toggle { display: block; }
-            .profile-banner { flex-direction: column; text-align: center; padding: 30px 20px; gap: 15px; }
-            .profile-info .email-phone { justify-content: center; gap: 10px; font-size: 0.9rem; }
+            
+            .profile-container { margin-top: 90px; }
+            .profile-banner { flex-direction: column; text-align: center; padding: 30px 20px; gap: 20px; }
+            .profile-img-container { width: 110px; height: 110px; }
+            .profile-info h1 { font-size: 2rem; }
+            .profile-info .email-phone { justify-content: center; gap: 10px; font-size: 0.9rem; flex-direction: column; }
+            
+            .content-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -190,7 +177,7 @@
                 <h1 id="userFullName">Loading Profile...</h1>
                 <div class="email-phone">
                     <span id="userEmail">📧 --</span>
-                    <span>•</span>
+                    <span class="dot-separator">•</span>
                     <span id="userPhone">📞 --</span>
                 </div>
                 <div class="address-badge">
@@ -200,17 +187,38 @@
         </div>
 
         <div class="content-grid">
+            
             <div class="card">
-                <h2 class="section-title">⚙️ Account Operations</h2>
+                <h2 class="section-title">⚙️ Account Settings</h2>
                 <ul class="settings-list">
                     <li class="settings-item" onclick="openModal('editProfileModal')">Edit Profile Details <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="window.location.href='orderhistory.html'">View Full Order History <span class="arrow">➔</span></li>
                     <li class="settings-item" onclick="openModal('passwordModal')">Change Secret Password <span class="arrow">➔</span></li>
-                    <li class="settings-item" onclick="alert('Manage addresses feature coming soon!')">Manage Delivery Addresses <span class="arrow">➔</span></li>
-                    <li class="settings-item" onclick="alert('Connecting to chat support...')">Help & Active Support <span class="arrow">➔</span></li>
+                    <li class="settings-item" onclick="window.location.href='manage-addresses.html'">Manage Delivery Addresses <span class="arrow">➔</span></li>
+                    <li class="settings-item" onclick="alert('Support is currently offline. Please email hello@homebite.in')">Help & Active Support <span class="arrow">➔</span></li>
                 </ul>
                 <button class="logout-btn" onclick="handleLogout()">🚪 Secure Logout</button>
             </div>
+
+            <div class="card">
+                <h2 class="section-title">⭐ My Subscriptions</h2>
+                
+                <div id="subscriptionsList">
+                    <div class="sub-box">
+                        <div class="sub-info">
+                            <h4>Aarti Sharma's Kitchen</h4>
+                            <p>Monthly Veg Tiffin Plan (Lunch & Dinner)</p>
+                            <p style="margin-top: 4px; font-weight: 600; color: var(--primary);">₹2,400 / month</p>
+                        </div>
+                        <div class="sub-status">Active</div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="save-btn" onclick="window.location.href='menu.html'" style="background: #fff5eb; color: var(--primary); border: 1px dashed var(--primary);">Explore New Kitchens</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -228,7 +236,7 @@
                     <input type="text" id="editPhone" required>
                 </div>
                 <div class="form-group">
-                    <label>Hostel Delivery Address</label>
+                    <label>Default / Old Address</label>
                     <textarea id="editAddress" rows="3" required></textarea>
                 </div>
                 <button type="submit" class="save-btn" id="saveProfileBtn">Save Changes</button>
@@ -267,25 +275,23 @@
         window.onload = function() {
             updateCartCount();
             
-            // LocalStorage se login data read karein
-            loggedInUser = JSON.parse(localStorage.getItem('homeBiteUser'));
+            // Check logged in user from local storage
+            loggedInUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('userData'));
 
-            if (!loggedInUser) {
+            if (!loggedInUser || !loggedInUser.id) {
                 alert("Please log in first to view your personal dashboard.");
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Interface pe dynamic info dikhana
             renderUserProfileUI();
         };
 
-        // UI details filling helper
         function renderUserProfileUI() {
             const fullName = loggedInUser.name || loggedInUser.user_metadata?.full_name || "HomeBite User";
             const email = loggedInUser.email || "No email added";
             const phone = loggedInUser.phone || loggedInUser.user_metadata?.phone_number || "No number added";
-            const address = loggedInUser.address || loggedInUser.user_metadata?.hostel_address || "No address added";
+            const address = loggedInUser.address || loggedInUser.user_metadata?.hostel_address || "No default address added";
             const photoUrl = loggedInUser.profile_pic_url;
 
             document.getElementById('userFullName').innerText = fullName;
@@ -305,7 +311,6 @@
             }
         }
 
-        // --- POPUPS CONTROL ---
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
             
@@ -320,9 +325,7 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // =======================================================
-        // 🚀 OPERATIONS 1: CLOUDINARY IMAGE SELECTION & API UPLOAD
-        // =======================================================
+        // Handle Image Upload
         async function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -336,7 +339,8 @@
             formData.append('userId', loggedInUser.id);
 
             try {
-                const response = await fetch('/api/update-profile', {
+                // UPDATE WITH YOUR ACTUAL RENDER URL LATER
+                const response = await fetch('https://homebite-gepq.onrender.com/api/update-profile', {
                     method: 'POST',
                     body: formData
                 });
@@ -346,7 +350,13 @@
                 if (result.success) {
                     alert("Profile Picture Updated Successfully!");
                     loggedInUser.profile_pic_url = result.profile_pic_url;
-                    localStorage.setItem('homeBiteUser', JSON.stringify(loggedInUser));
+                    
+                    if(localStorage.getItem('userData')) {
+                        localStorage.setItem('userData', JSON.stringify(loggedInUser));
+                    } else {
+                        localStorage.setItem('user', JSON.stringify(loggedInUser));
+                    }
+                    
                     renderUserProfileUI();
                 } else {
                     alert("Upload Failed: " + result.message);
@@ -359,9 +369,7 @@
             }
         }
 
-        // =======================================================
-        // 🚀 OPERATIONS 2: SAVE PROFILE TEXT DETAILS (NAME, PHONE, ADDR)
-        // =======================================================
+        // Save Profile Details
         async function saveProfileDetails(e) {
             e.preventDefault();
             const saveBtn = document.getElementById('saveProfileBtn');
@@ -379,7 +387,8 @@
             formData.append('address', updatedAddress);
 
             try {
-                const response = await fetch('/api/update-profile', {
+                // UPDATE WITH YOUR ACTUAL RENDER URL LATER
+                const response = await fetch('https://homebite-gepq.onrender.com/api/update-profile', {
                     method: 'POST',
                     body: formData
                 });
@@ -393,12 +402,11 @@
                     loggedInUser.phone = updatedPhone;
                     loggedInUser.address = updatedAddress;
 
-                    if(!loggedInUser.user_metadata) loggedInUser.user_metadata = {};
-                    loggedInUser.user_metadata.full_name = updatedName;
-                    loggedInUser.user_metadata.phone_number = updatedPhone;
-                    loggedInUser.user_metadata.hostel_address = updatedAddress;
-
-                    localStorage.setItem('homeBiteUser', JSON.stringify(loggedInUser));
+                    if(localStorage.getItem('userData')) {
+                        localStorage.setItem('userData', JSON.stringify(loggedInUser));
+                    } else {
+                        localStorage.setItem('user', JSON.stringify(loggedInUser));
+                    }
                     
                     closeModal('editProfileModal');
                     renderUserProfileUI();
@@ -406,24 +414,14 @@
                     alert("Sync Error: " + result.message);
                 }
             } catch (err) {
-                alert("Server Connection Failed. Local storage saved temporarily.");
-                
-                loggedInUser.name = updatedName;
-                loggedInUser.phone = updatedPhone;
-                loggedInUser.address = updatedAddress;
-                localStorage.setItem('homeBiteUser', JSON.stringify(loggedInUser));
-                
-                closeModal('editProfileModal');
-                renderUserProfileUI();
+                alert("Server Connection Failed.");
             } finally {
                 saveBtn.innerText = "Save Changes";
                 saveBtn.disabled = false;
             }
         }
 
-        // =======================================================
-        // 🚀 OPERATIONS 3: PASSWORD UPDATE LOGIC
-        // =======================================================
+        // Update Password
         async function saveNewPassword(e) {
             e.preventDefault();
             const newPass = document.getElementById('newPassword').value;
@@ -444,7 +442,7 @@
             pBtn.disabled = true;
 
             try {
-                const response = await fetch('/api/change-password', {
+                const response = await fetch('https://homebite-gepq.onrender.com/api/change-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: loggedInUser.id, password: newPass })
@@ -459,18 +457,16 @@
                     alert("Failed: " + result.message);
                 }
             } catch (err) {
-                alert("Password Update simulated successfully!");
-                closeModal('passwordModal');
-                document.getElementById('changePasswordForm').reset();
+                alert("Server Connection Error!");
             } finally {
                 pBtn.innerText = "Update Password";
                 pBtn.disabled = false;
             }
         }
 
-        // SECURE LOGOUT
         function handleLogout() {
-            localStorage.removeItem('homeBiteUser');
+            localStorage.removeItem('user');
+            localStorage.removeItem('userData');
             localStorage.removeItem('homeBiteToken');
             alert("Logged out successfully! Have a good day.");
             window.location.href = 'login.html';
