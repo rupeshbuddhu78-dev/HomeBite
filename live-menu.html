@@ -91,6 +91,15 @@
         .add-btn { background: #fdf5ef; color: var(--primary); border: 1px solid #ffe1cd; padding: 8px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 1rem;}
         .add-btn:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255, 107, 0, 0.2); }
 
+        /* Premium Quantity Selector Style */
+        .qty-selector {
+            display: flex; align-items: center; gap: 12px; background: #fff5ef; 
+            border: 1px solid #ffe1cd; padding: 6px 14px; border-radius: 8px; 
+            font-size: 0.95rem; user-select: none; color: var(--primary);
+        }
+        .qty-selector span { cursor: pointer; font-weight: 800; transition: 0.1s; }
+        .qty-selector span:active { transform: scale(1.2); }
+
         .no-results { text-align: center; grid-column: 1 / -1; padding: 50px; color: #888; font-size: 1.1rem; }
         .loader { text-align: center; grid-column: 1 / -1; padding: 50px; font-size: 1.2rem; color: var(--primary); font-weight: bold; }
 
@@ -206,19 +215,16 @@
         const API_URL = "https://homebite-gepq.onrender.com"; 
 
         let allLiveFood = []; // API se aane wala data yahan save hoga
+        let cartArray = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
 
         // --- FETCH DATA FROM DATABASE --- //
         async function fetchLiveFood() {
             try {
-                // humne yahan /api/food-items call kiya (aapke app me ye addMenuItem k liye use hota h, backend me hum isko GET kar rahe hain)
-                // Note: Agar aapke backend me saare food items lane ki API /api/food-items nahi hai, 
-                // toh aap mujhe bata dena ki saare khane ki list backend se kis API se aati hai. 
-                // Abhi ke liye mai assume kar raha hu ki GET /api/food-items saara data dega.
                 const response = await fetch(`${API_URL}/api/food-items`); 
                 const data = await response.json();
 
                 if (data.success) {
-                    allLiveFood = data.items; // API response ke hisaab se (items array)
+                    allLiveFood = data.items; 
                     renderGrid(allLiveFood);
                 } else {
                     document.getElementById('foodGrid').innerHTML = `<div class="no-results">Failed to load food items.</div>`;
@@ -230,52 +236,50 @@
         }
 
         // --- CART LOGIC WITH LOCALSTORAGE --- //
-        let cartArray = JSON.parse(localStorage.getItem('homeBiteCart')) || [];
-
         function updateCartCounter() {
             const countSpan = document.getElementById('navCartCount');
-            const totalItems = cartArray.reduce((total, item) => total + item.quantity, 0);
-            countSpan.innerText = totalItems;
-            
-            // Pop animation
-            countSpan.classList.add('pop');
-            setTimeout(() => countSpan.classList.remove('pop'), 300);
+            if (countSpan) {
+                const totalItems = cartArray.reduce((total, item) => total + item.quantity, 0);
+                countSpan.innerText = totalItems;
+                
+                // Pop animation
+                countSpan.classList.add('pop');
+                setTimeout(() => countSpan.classList.remove('pop'), 300);
+            }
         }
 
-        function addToCart(itemId, btnElement) {
-            // Find item from fetched data
+        // PREMIUM: Single function to handle dynamic add, plus, and minus updates
+        function changeQuantity(itemId, change) {
             const foodItem = allLiveFood.find(item => item.id == itemId);
-            if(foodItem) {
-                const existingItem = cartArray.find(item => item.id == itemId);
-                if(existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    // Yahan hum chef_id bhi cart me daal rahe hain taaki order karte waqt kaam aaye
-                    cartArray.push({
-                        id: foodItem.id,
-                        name: foodItem.name,
-                        chefName: foodItem.cook_name || "HomeBite Chef",
-                        chefId: foodItem.cook_id,
-                        basePrice: foodItem.price,
-                        quantity: 1,
-                        img: foodItem.image_url || 'https://via.placeholder.com/400x200?text=Food'
-                    });
-                }
-                
-                localStorage.setItem('homeBiteCart', JSON.stringify(cartArray));
-                updateCartCounter();
+            if (!foodItem) return;
 
-                // Button visual feedback
-                btnElement.innerText = "ADDED ✓";
-                btnElement.style.background = "var(--primary)";
-                btnElement.style.color = "white";
-                
-                setTimeout(() => {
-                    btnElement.innerText = "ADD";
-                    btnElement.style.background = "#fff5ef";
-                    btnElement.style.color = "var(--primary)";
-                }, 1000);
+            const existingItem = cartArray.find(item => item.id == itemId);
+
+            if (existingItem) {
+                existingItem.quantity += change;
+                if (existingItem.quantity <= 0) {
+                    // Item removes from cart completely if qty reaches 0
+                    cartArray = cartArray.filter(item => item.id != itemId);
+                }
+            } else if (change > 0) {
+                // First-time addition
+                cartArray.push({
+                    id: foodItem.id,
+                    name: foodItem.name,
+                    chefName: foodItem.cook_name || "HomeBite Chef",
+                    chefId: foodItem.cook_id,
+                    basePrice: foodItem.price,
+                    quantity: 1,
+                    img: foodItem.image_url || 'https://via.placeholder.com/400x200?text=Food'
+                });
             }
+            
+            // Save inside localStorage & update counter
+            localStorage.setItem('homeBiteCart', JSON.stringify(cartArray));
+            updateCartCounter();
+
+            // Seamless live refresh of button states without breaking scrolling/filters
+            applyFilters();
         }
 
         // --- FILTERING LOGIC --- //
@@ -316,14 +320,27 @@
             }
 
             data.forEach(item => {
-                // API field names ke hisaab se adjustments (aapke database columns ke naam)
                 const isVeg = item.type === 'Veg' || item.type === 'veg';
                 const iconClass = isVeg ? 'veg-icon' : 'veg-icon nonveg-icon';
                 const imgUrl = item.image_url ? item.image_url : 'https://via.placeholder.com/400x200?text=Food';
                 const cookName = item.cook_name ? item.cook_name : 'Home Chef';
-                
-                // Description field agar db me nahi hai toh blank chhodenge
                 const desc = item.description || "";
+
+                // Premium Swiggy/Zomato style reactive state check
+                const cartItem = cartArray.find(c => c.id == item.id);
+                let buttonHTML = '';
+
+                if (cartItem) {
+                    buttonHTML = `
+                        <div class="qty-selector">
+                            <span onclick="changeQuantity('${item.id}', -1)">➖</span>
+                            <span style="font-weight: 800; min-width: 20px; text-align: center;">${cartItem.quantity}</span>
+                            <span onclick="changeQuantity('${item.id}', 1)">➕</span>
+                        </div>
+                    `;
+                } else {
+                    buttonHTML = `<button onclick="changeQuantity('${item.id}', 1)" class="add-btn">ADD</button>`;
+                }
 
                 const card = `
                     <div class="food-card">
@@ -340,7 +357,7 @@
                             
                             <div class="food-bottom">
                                 <div class="food-price">₹${item.price}</div>
-                                <button onclick="addToCart(${item.id}, this)" class="add-btn">ADD</button>
+                                <div>${buttonHTML}</div>
                             </div>
                         </div>
                     </div>
@@ -351,7 +368,7 @@
 
         // --- ONLOAD INITIALIZATION --- //
         window.onload = () => {
-            fetchLiveFood(); // Fetch database se start
+            fetchLiveFood(); 
             updateCartCounter(); 
         };
 
