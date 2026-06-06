@@ -11,26 +11,29 @@ const crypto = require('crypto');             // 🔥 Crypto for Signature Verif
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware Setup
+// ==========================================
+// MIDDLEWARE SETUP
+// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(__dirname)); // static फ़ाइल्स को सर्व करने के लिए
+app.use(express.static(__dirname)); // Static files serve karne ke liye
 
 // ==========================================
 // CLOUDINARY CONFIGURATION 
+// (Tip: Production me in keys ko .env me move kar dena)
 // ==========================================
 cloudinary.config({
-    cloud_name: 'dr8yguhui',
-    api_key: '981929427569341',
-    api_secret: '5GPy1IaiebH5TPTH9jnn7uHElk8' 
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dr8yguhui',
+    api_key: process.env.CLOUDINARY_API_KEY || '981929427569341',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '5GPy1IaiebH5TPTH9jnn7uHElk8' 
 });
 
 // Multer Memory Storage Setup
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Cloudinary हेल्पर फ़ंक्शन
+// Cloudinary Helper Function
 const uploadToCloudinary = (fileBuffer, folderName) => {
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -47,16 +50,16 @@ const uploadToCloudinary = (fileBuffer, folderName) => {
 // ==========================================
 // SUPABASE DATABASE SETUP
 // ==========================================
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'YOUR_FALLBACK_URL';
+const supabaseKey = process.env.SUPABASE_KEY || 'YOUR_FALLBACK_KEY';
 
-if (!supabaseUrl || !supabaseKey) {
-    console.error("❌ ERROR: Supabase Keys missing! Ensure they are added in Render Env.");
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    console.warn("⚠️ WARNING: Supabase Keys missing in .env! Using fallbacks or it might fail.");
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// डेटाबेस कनेक्शन टेस्टिंग फ़ंक्शन
+// Database Connection Testing Function
 async function testConnection() {
     const { data, error } = await supabase.from('users').select('id').limit(1);
     if (error) {
@@ -84,6 +87,7 @@ app.post('/api/signup', async (req, res) => {
     try {
         let profilePicUrl = null;
 
+        // Base64 image handling
         if (profileImage && profileImage.trim() !== "") {
             const cloudinaryResult = await cloudinary.uploader.upload(profileImage, {
                 folder: 'homebite_users'
@@ -109,7 +113,7 @@ app.post('/api/signup', async (req, res) => {
                 phone: phone, 
                 address: address, // Saving Address during Signup
                 profile_pic_url: profilePicUrl,
-                password: password
+                password: password // Keep in mind: Supabase auth password logic is separate
             }]);
 
         if (dbError) return res.status(500).json({ success: false, message: "Auth successful, but failed to save profile details: " + dbError.message });
@@ -262,7 +266,6 @@ app.post('/api/update-profile', upload.single('profile_pic'), async (req, res) =
 // 🔥 ADDRESS MANAGEMENT APIs
 // ==========================================
 
-// 1. GET Addresses (यूज़र के सारे एड्रेस मंगाने के लिए)
 app.get('/api/addresses/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -280,7 +283,6 @@ app.get('/api/addresses/:userId', async (req, res) => {
     }
 });
 
-// 2. ADD Address (नया एड्रेस सेव करने के लिए)
 app.post('/api/addresses', async (req, res) => {
     const { userId, full_address, landmark, pincode } = req.body;
     try {
@@ -296,7 +298,6 @@ app.post('/api/addresses', async (req, res) => {
     }
 });
 
-// 3. EDIT Address (पुराना एड्रेस अपडेट करने के लिए)
 app.put('/api/addresses/:id', async (req, res) => {
     const { id } = req.params;
     const { full_address, landmark, pincode } = req.body;
@@ -314,7 +315,6 @@ app.put('/api/addresses/:id', async (req, res) => {
     }
 });
 
-// 4. DELETE Address (एड्रेस डिलीट करने के लिए)
 app.delete('/api/addresses/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -444,6 +444,10 @@ app.post('/api/verify-payment', async (req, res) => {
         // 2. Payment pakka ho gaya, ab database mein save karo
         const { userId, cookId, items, grandTotal, deliveryAddress } = orderDetails;
 
+        if (!items || items.length === 0) {
+            return res.status(400).json({ success: false, message: "Order items cannot be empty." });
+        }
+
         const { data: orderData, error: orderError } = await supabase
             .from('orders')
             .insert([{
@@ -465,7 +469,7 @@ app.post('/api/verify-payment', async (req, res) => {
             order_id: orderId,
             food_id: item.id,            
             quantity: item.quantity,
-            price: item.basePrice        
+            price: item.price || item.basePrice || 0 // 🔥 Bug Fix: Fallback added to prevent null value error
         }));
 
         const { error: itemsError } = await supabase.from('order_items').insert(orderItemsArray);
@@ -486,6 +490,10 @@ app.post('/api/orders', async (req, res) => {
 
     if (paymentMethod === 'Online') {
         return res.status(400).json({ success: false, message: "Please use online checkout for online payments." });
+    }
+
+    if (!items || items.length === 0) {
+        return res.status(400).json({ success: false, message: "Order items cannot be empty." });
     }
 
     try {
@@ -510,7 +518,7 @@ app.post('/api/orders', async (req, res) => {
             order_id: orderId,
             food_id: item.id,            
             quantity: item.quantity,
-            price: item.basePrice        
+            price: item.price || item.basePrice || 0 // 🔥 Bug Fix: Added safe fallback 
         }));
 
         const { error: itemsError } = await supabase.from('order_items').insert(orderItemsArray);
