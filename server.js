@@ -46,7 +46,10 @@ const uploadToCloudinary = (fileBuffer, folderName) => {
         uploadStream.end(fileBuffer);
     });
 };
-
+console.log("OS Type:", os.type());         // Output: Windows_NT (Agar Windows hai)
+console.log("Platform:", os.platform());    // Output: win32 (Windows ke liye), darwin (Mac ke liye)
+console.log("Architecture:", os.arch());    // Output: x64
+console.log("OS Release:", os.release()); 
 // ==========================================
 // SUPABASE DATABASE SETUP
 // ==========================================
