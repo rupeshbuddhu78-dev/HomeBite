@@ -1,4 +1,5 @@
 require('dotenv').config();
+const os = require('os');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -46,11 +47,14 @@ const uploadToCloudinary = (fileBuffer, folderName) => {
         uploadStream.end(fileBuffer);
     });
 };
-console.log("OS Type:", os.type());         // Output: Windows_NT (Agar Windows hai)
-console.log("Platform:", os.platform());    // Output: win32 (Windows ke liye), darwin (Mac ke liye)
-console.log("Architecture:", os.arch());    // Output: x64
-console.log("OS Release:", os.release()); 
-// ==========================================
+console.log("OS Type:", os.type());         // Output: Linux (Linux systems ke liye)
+console.log("Platform:", os.platform());    // Output: linux (Lower case mein 'linux' aayega)
+console.log("Architecture:", os.arch());    // Output: x64 (Agar 64-bit hai, ya arm64/arm agar Raspberry Pi/AWS Graviton hai)
+console.log("OS Release:", os.release());   // Output: 5.15.0-81-generic (Yeh Linux Kernel ka version batayega)
+
+// System kitne ghante se ON hai (Yeh logic same rahega)
+const uptimeHours = os.uptime() / 3600; 
+console.log(`System is running since ${uptimeHours.toFixed(2)} hours`);
 // SUPABASE DATABASE SETUP
 // ==========================================
 const supabaseUrl = process.env.SUPABASE_URL || 'YOUR_FALLBACK_URL';
